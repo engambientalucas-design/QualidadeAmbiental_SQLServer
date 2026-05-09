@@ -64,7 +64,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/modelo_dados.md`: documenta o modelo de dados, tabelas, relacionamentos, integridade, views, limitações e evoluções futuras.
 - `docs/regras_negocio.md`: documenta as regras de negócio implementadas, regras de conformidade, tratamento de resultados sem limite, eficiência de remoção da ETE e limitações atuais.
 - `docs/relatorios.md`: documenta views, consultas analíticas, indicadores, interpretações e prints recomendados para portfólio.
-- `docs/dicionario_dados.md`: previsto para detalhar tabelas e colunas em formato de dicionário de dados.
+- `docs/dicionario_dados.md`: dicionário de dados técnico com tabelas, colunas, tipos de dados, chaves, constraints e relacionamentos.
 
 ## Ordem recomendada de execução dos scripts
 
@@ -322,7 +322,6 @@ Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser
 
 ## Próximas melhorias previstas
 
-- Criar `docs/dicionario_dados.md` com descrição detalhada de tabelas e colunas.
 - Avaliar índices adicionais para colunas usadas em filtros, junções e agrupamentos.
 - Criar consultas adicionais de apoio para portfólio, se forem necessárias para demonstração.
 - Revisar futuramente limites de referência com base normativa, se esse for o objetivo.
@@ -374,11 +373,11 @@ Já foi concluído:
 - documentação principal do projeto;
 - documentação técnica do modelo de dados em `docs/modelo_dados.md`;
 - documentação de regras de negócio em `docs/regras_negocio.md`;
-- documentação de relatórios, views e indicadores em `docs/relatorios.md`.
+- documentação de relatórios, views e indicadores em `docs/relatorios.md`;
+- dicionário de dados técnico em `docs/dicionario_dados.md`.
 
 Ainda precisa ser concluído:
 
-- dicionário de dados em `docs/dicionario_dados.md`;
 - eventual registro de evidências das validações no SSMS;
 - avaliação de índices e melhorias futuras.
 
@@ -387,4 +386,3 @@ Ainda precisa ser concluído:
 - Validar se a constraint de unicidade por amostra e parâmetro atende ao cenário final do projeto.
 - Decidir se os limites didáticos serão mantidos ou se haverá revisão normativa posterior.
 - Avaliar criação de índices adicionais para consultas analíticas, se o volume de dados crescer.
-- Criar a documentação prevista em `docs/dicionario_dados.md`.
