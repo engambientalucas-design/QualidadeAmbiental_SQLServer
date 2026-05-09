@@ -57,6 +57,15 @@ QualidadeAmbiental_SQLServer/
 - `sql/`: scripts oficiais do banco de dados.
 - `sql/migrations/`: scripts incrementais de correção, evolução ou manutenção.
 
+## Documentação complementar
+
+A documentação complementar do projeto fica na pasta `docs/` e deve ser usada como apoio para leitura técnica, continuidade do projeto e apresentação em portfólio.
+
+- `docs/modelo_dados.md`: documenta o modelo de dados, tabelas, relacionamentos, integridade, views, limitações e evoluções futuras.
+- `docs/regras_negocio.md`: documenta as regras de negócio implementadas, regras de conformidade, tratamento de resultados sem limite, eficiência de remoção da ETE e limitações atuais.
+- `docs/relatorios.md`: documenta views, consultas analíticas, indicadores, interpretações e prints recomendados para portfólio.
+- `docs/dicionario_dados.md`: previsto para detalhar tabelas e colunas em formato de dicionário de dados.
+
 ## Ordem recomendada de execução dos scripts
 
 Os scripts devem ser executados preferencialmente no SQL Server Management Studio, nesta ordem:
@@ -267,7 +276,7 @@ Esta seção registra decisões e avanços entre os arquivos oficiais para facil
 
 ## Como validar o banco
 
-Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados:
+Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados. No estado atual do projeto, os scripts oficiais foram executados no SQL Server Management Studio e o checklist final retornou `OK` para os principais indicadores.
 
 - Após executar `03_insert_cadastros.sql`:
   - Total de responsáveis: 4
@@ -285,7 +294,7 @@ Após executar os scripts de criação, inserts e views, as consultas analítica
   - Conformes com limite: 50
   - Não conformes com limite: 7
 
-Validações consolidadas esperadas:
+Validações consolidadas confirmadas:
 
 - Total de resultados analíticos: 72
 - Resultados com limite: 57
@@ -301,24 +310,33 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 
 1. Abrir a pasta do projeto no VS Code ou editor equivalente.
 2. Conferir a estrutura de pastas descrita neste README.
-3. Executar os scripts SQL na ordem recomendada.
-4. Validar se o banco `QualidadeAmbiental` foi criado corretamente.
-5. Validar se as tabelas, relacionamentos e constraints foram criados.
-6. Inserir ou revisar dados de cadastro.
-7. Inserir ou revisar amostras e resultados.
-8. Executar ou revisar as views oficiais.
-9. Rodar as consultas de validação.
-10. Registrar qualquer correção incremental em `sql/migrations/`.
+3. Conferir os scripts oficiais na pasta `sql/`.
+4. Em um novo ambiente, executar os scripts SQL na ordem recomendada.
+5. Rodar `sql/06_consultas_analiticas.sql` e confirmar se o checklist final retorna `OK`.
+6. Consultar `docs/modelo_dados.md` para entender a estrutura do modelo.
+7. Consultar `docs/regras_negocio.md` para entender regras, classificações e limitações.
+8. Registrar qualquer correção incremental em `sql/migrations/`.
+9. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
 ## Próximas melhorias previstas
 
-- Documentar o dicionário de dados em `docs/`.
+- Criar `docs/dicionario_dados.md` com descrição detalhada de tabelas e colunas.
 - Avaliar índices adicionais para colunas usadas em filtros, junções e agrupamentos.
-- Criar consultas de apoio para portfólio, com exemplos de indicadores ambientais.
+- Criar consultas adicionais de apoio para portfólio, se forem necessárias para demonstração.
 - Revisar futuramente limites de referência com base normativa, se esse for o objetivo.
-- Executar todos os scripts no SSMS e registrar evidências dos resultados esperados.
+- Registrar evidências visuais ou textuais das validações executadas no SSMS, se for útil para portfólio.
+
+## Versionamento com Git
+
+O repositório Git foi inicializado na pasta do projeto.
+
+Estado atual do versionamento:
+
+- Existe um commit inicial com os arquivos principais do projeto.
+- A documentação de regras de negócio foi adicionada em commit separado.
+- O histórico deve ser mantido com commits pequenos e descritivos, especialmente para novas documentações, ajustes em scripts SQL e evoluções futuras.
 
 ## Observações sobre uso de IA no desenvolvimento
 
@@ -337,9 +355,9 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: em desenvolvimento.
+Status: em desenvolvimento, com estrutura principal criada, scripts executados e validações finais confirmadas.
 
-Já foi iniciado:
+Já foi concluído:
 
 - estrutura inicial de pastas;
 - script de criação do banco de dados;
@@ -349,20 +367,24 @@ Já foi iniciado:
 - script de views oficiais;
 - script de consultas analíticas e validações finais;
 - validações de contagem para os cadastros;
-- documentação principal do projeto.
+- execução dos scripts oficiais no SQL Server Management Studio;
+- confirmação do checklist final com status `OK`;
+- inicialização do repositório Git;
+- criação do commit inicial;
+- documentação principal do projeto;
+- documentação técnica do modelo de dados em `docs/modelo_dados.md`;
+- documentação de regras de negócio em `docs/regras_negocio.md`;
+- documentação de relatórios, views e indicadores em `docs/relatorios.md`.
 
 Ainda precisa ser concluído:
 
-- execução completa dos scripts no SSMS;
-- conferência dos resultados esperados no ambiente local;
-- documentação complementar em `docs/`.
+- dicionário de dados em `docs/dicionario_dados.md`;
+- eventual registro de evidências das validações no SSMS;
+- avaliação de índices e melhorias futuras.
 
 ## Pendências identificadas
 
-- Executar os scripts no SSMS e confirmar os totais esperados em ambiente local.
-- Confirmar, por meio do `06_consultas_analiticas.sql`, que os resultados sem limite de referência totalizam 15 registros.
-- Confirmar, por meio do `06_consultas_analiticas.sql`, que os resultados com limite totalizam 57 registros.
-- Confirmar, por meio do `06_consultas_analiticas.sql`, que os resultados conformes com limite totalizam 50 registros.
-- Confirmar, por meio do `06_consultas_analiticas.sql`, que os resultados não conformes com limite totalizam 7 registros.
 - Validar se a constraint de unicidade por amostra e parâmetro atende ao cenário final do projeto.
 - Decidir se os limites didáticos serão mantidos ou se haverá revisão normativa posterior.
+- Avaliar criação de índices adicionais para consultas analíticas, se o volume de dados crescer.
+- Criar a documentação prevista em `docs/dicionario_dados.md`.
