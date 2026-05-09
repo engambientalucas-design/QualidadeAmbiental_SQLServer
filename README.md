@@ -38,6 +38,12 @@ Neste projeto, os dados representam um cenário didático de monitoramento ambie
 ```text
 QualidadeAmbiental_SQLServer/
 |-- docs/
+|   |-- evidencias/
+|   |-- dicionario_dados.md
+|   |-- evidencias_validacao.md
+|   |-- modelo_dados.md
+|   |-- regras_negocio.md
+|   `-- relatorios.md
 |-- scripts/
 |-- sql/
 |   |-- migrations/
@@ -65,6 +71,8 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/regras_negocio.md`: documenta as regras de negócio implementadas, regras de conformidade, tratamento de resultados sem limite, eficiência de remoção da ETE e limitações atuais.
 - `docs/relatorios.md`: documenta views, consultas analíticas, indicadores, interpretações e prints recomendados para portfólio.
 - `docs/dicionario_dados.md`: dicionário de dados técnico com tabelas, colunas, tipos de dados, chaves, constraints e relacionamentos.
+- `docs/evidencias_validacao.md`: documenta as validações executadas, os resultados confirmados e as evidências visuais registradas.
+- `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
 
@@ -315,8 +323,11 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 5. Rodar `sql/06_consultas_analiticas.sql` e confirmar se o checklist final retorna `OK`.
 6. Consultar `docs/modelo_dados.md` para entender a estrutura do modelo.
 7. Consultar `docs/regras_negocio.md` para entender regras, classificações e limitações.
-8. Registrar qualquer correção incremental em `sql/migrations/`.
-9. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+8. Consultar `docs/relatorios.md` para entender views, consultas e indicadores.
+9. Consultar `docs/dicionario_dados.md` para referência coluna a coluna.
+10. Consultar `docs/evidencias_validacao.md` e `docs/evidencias/` para verificar as evidências visuais registradas.
+11. Registrar qualquer correção incremental em `sql/migrations/`.
+12. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
@@ -325,7 +336,7 @@ Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser
 - Avaliar índices adicionais para colunas usadas em filtros, junções e agrupamentos.
 - Criar consultas adicionais de apoio para portfólio, se forem necessárias para demonstração.
 - Revisar futuramente limites de referência com base normativa, se esse for o objetivo.
-- Registrar evidências visuais ou textuais das validações executadas no SSMS, se for útil para portfólio.
+- Avaliar criação de uma versão/tag estável do projeto para publicação.
 
 ## Versionamento com Git
 
@@ -335,6 +346,7 @@ Estado atual do versionamento:
 
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
+- As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
 - O histórico deve ser mantido com commits pequenos e descritivos, especialmente para novas documentações, ajustes em scripts SQL e evoluções futuras.
 
 ## Observações sobre uso de IA no desenvolvimento
@@ -374,12 +386,14 @@ Já foi concluído:
 - documentação técnica do modelo de dados em `docs/modelo_dados.md`;
 - documentação de regras de negócio em `docs/regras_negocio.md`;
 - documentação de relatórios, views e indicadores em `docs/relatorios.md`;
-- dicionário de dados técnico em `docs/dicionario_dados.md`.
+- dicionário de dados técnico em `docs/dicionario_dados.md`;
+- documentação de evidências de validação em `docs/evidencias_validacao.md`;
+- prints de validação registrados em `docs/evidencias/`.
 
 Ainda precisa ser concluído:
 
-- eventual registro de evidências das validações no SSMS;
 - avaliação de índices e melhorias futuras.
+- eventual criação de tag de versão para publicação do projeto.
 
 ## Pendências identificadas
 
