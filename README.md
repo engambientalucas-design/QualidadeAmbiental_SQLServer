@@ -6,6 +6,8 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
+Versão atual: `v1.0.0` - base relacional, carga didática, views analíticas, consultas de validação, documentação técnica e evidências de execução.
+
 ## Objetivo do projeto
 
 Criar uma base de dados estruturada para registrar e analisar informações de qualidade ambiental, permitindo:
@@ -53,6 +55,10 @@ QualidadeAmbiental_SQLServer/
 |   |-- 04_insert_amostras_resultados.sql
 |   |-- 05_views_oficiais.sql
 |   `-- 06_consultas_analiticas.sql
+|-- CHANGELOG.md
+|-- dados.csv
+|-- dashboard_qualidade_agua.html
+|-- dashboard_qualidade_agua_final.html
 `-- README.md
 ```
 
@@ -67,6 +73,7 @@ QualidadeAmbiental_SQLServer/
 
 A documentação complementar do projeto fica na pasta `docs/` e deve ser usada como apoio para leitura técnica, continuidade do projeto e apresentação em portfólio.
 
+- `CHANGELOG.md`: histórico de versões e evolução planejada do projeto.
 - `docs/modelo_dados.md`: documenta o modelo de dados, tabelas, relacionamentos, integridade, views, limitações e evoluções futuras.
 - `docs/regras_negocio.md`: documenta as regras de negócio implementadas, regras de conformidade, tratamento de resultados sem limite, eficiência de remoção da ETE e limitações atuais.
 - `docs/relatorios.md`: documenta views, consultas analíticas, indicadores, interpretações e prints recomendados para portfólio.
@@ -331,12 +338,25 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
-## Próximas melhorias previstas
+## Roadmap de evolução
 
-- Avaliar índices adicionais para colunas usadas em filtros, junções e agrupamentos.
-- Criar consultas adicionais de apoio para portfólio, se forem necessárias para demonstração.
-- Revisar futuramente limites de referência com base normativa, se esse for o objetivo.
-- Avaliar criação de uma versão/tag estável do projeto para publicação.
+O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável do portfólio. As próximas fases devem ser evoluídas com commits e tags próprias.
+
+| Versão | Foco | Objetivo técnico |
+| --- | --- | --- |
+| `v1.0.0` | Publicação inicial | Base relacional, dados didáticos, views, consultas analíticas, documentação e evidências. |
+| `v1.1.0` | Índices e performance | Criar índices orientados por consultas reais, analisar planos de execução e documentar ganhos ou trade-offs. |
+| `v1.2.0` | Stored procedures | Criar procedures úteis para operações e relatórios, evitando objetos artificiais sem valor de negócio. |
+| `v1.3.0` | Auditoria e histórico | Adicionar rastreabilidade para alterações relevantes, especialmente resultados e limites de referência. |
+| `v1.4.0` | Backup e restore | Documentar e implementar scripts operacionais de backup, restore e validação pós-recuperação. |
+| `v2.0.0` | Pipeline de importação | Criar fluxo de carga com staging, validação, tratamento de inconsistências e carga final. |
+| `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
+
+Melhorias transversais:
+
+- revisar futuramente limites de referência com base normativa, se esse for o objetivo;
+- manter documentação, evidências e changelog atualizados a cada evolução relevante;
+- registrar decisões técnicas, limitações e critérios de validação por versão.
 
 ## Versionamento com Git
 
@@ -344,10 +364,17 @@ O repositório Git foi inicializado na pasta do projeto.
 
 Estado atual do versionamento:
 
+- A versão `v1.0.0` representa a base estável para publicação inicial no GitHub.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
 - O histórico deve ser mantido com commits pequenos e descritivos, especialmente para novas documentações, ajustes em scripts SQL e evoluções futuras.
+
+Antes da publicação no GitHub, recomenda-se criar uma tag local:
+
+```powershell
+git tag -a v1.0.0 -m "Versao inicial publicavel"
+```
 
 ## Observações sobre uso de IA no desenvolvimento
 
@@ -366,7 +393,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: em desenvolvimento, com estrutura principal criada, scripts executados e validações finais confirmadas.
+Status: `v1.0.0` pronta para publicação inicial, com estrutura principal criada, scripts executados e validações finais confirmadas.
 
 Já foi concluído:
 
@@ -392,8 +419,8 @@ Já foi concluído:
 
 Ainda precisa ser concluído:
 
-- avaliação de índices e melhorias futuras.
-- eventual criação de tag de versão para publicação do projeto.
+- criação da tag `v1.0.0` antes da publicação no GitHub;
+- evolução da fase `v1.1.0` com índices, performance e análise de plano de execução.
 
 ## Pendências identificadas
 
