@@ -364,17 +364,12 @@ O repositório Git foi inicializado na pasta do projeto.
 
 Estado atual do versionamento:
 
-- A versão `v1.0.0` representa a base estável para publicação inicial no GitHub.
+- A versão `v1.0.0` representa a base estável da publicação inicial no GitHub.
+- A tag anotada `v1.0.0` já foi criada e publicada no GitHub, apontando para o commit da versão inicial publicável.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
 - O histórico deve ser mantido com commits pequenos e descritivos, especialmente para novas documentações, ajustes em scripts SQL e evoluções futuras.
-
-Antes da publicação no GitHub, recomenda-se criar uma tag local:
-
-```powershell
-git tag -a v1.0.0 -m "Versao inicial publicavel"
-```
 
 ## Observações sobre uso de IA no desenvolvimento
 
@@ -393,7 +388,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.0.0` pronta para publicação inicial, com estrutura principal criada, scripts executados e validações finais confirmadas.
+Status: `v1.0.0` publicada no GitHub, com estrutura principal criada, scripts executados e validações finais confirmadas.
 
 Já foi concluído:
 
@@ -419,7 +414,6 @@ Já foi concluído:
 
 Ainda precisa ser concluído:
 
-- criação da tag `v1.0.0` antes da publicação no GitHub;
 - evolução da fase `v1.1.0` com índices, performance e análise de plano de execução.
 
 ## Pendências identificadas
