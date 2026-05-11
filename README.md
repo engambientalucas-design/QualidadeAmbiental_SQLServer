@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v1.0.0` - base relacional, carga didática, views analíticas, consultas de validação, documentação técnica e evidências de execução.
+Versão atual: `v1.1.0` - índices incrementais, documentação técnica de performance, validação no SQL Server Management Studio e evidências de plano de execução.
 
 ## Objetivo do projeto
 
