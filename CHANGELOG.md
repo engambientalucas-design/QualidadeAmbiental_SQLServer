@@ -42,11 +42,28 @@ Versão inicial publicável do projeto `QualidadeAmbiental_SQLServer`.
 - Os limites de referência cadastrados são didáticos e não devem ser tratados como base legal ou normativa real.
 - A constraint de unicidade por amostra e parâmetro atende ao escopo atual, mas pode exigir revisão em uma fase futura caso o projeto passe a registrar replicatas, contraprovas ou reanálises.
 
+## [v1.1.0] - 2026-05-11 - Índices e performance
+
+Fase dedicada a índices, performance e análise de plano de execução.
+
+### Adicionado
+
+- Script incremental `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql`.
+- Índice `IX_Tbl_Amostras_DataColeta_Tipo_Ponto` para apoiar análises por data de coleta, tipo de amostra e ponto de coleta.
+- Índice `IX_Tbl_ResultadosAnalise_Parametro_Amostra` para complementar a unicidade existente e favorecer análises que partem de parâmetro ambiental.
+- Consultas de verificação dos índices criados via catálogo do SQL Server.
+- Documento `docs/performance_indices.md` com justificativas, trade-offs e orientações de análise de plano de execução.
+
+### Observações
+
+- Os índices foram definidos de forma conservadora, priorizando tabelas operacionais e consultas analíticas reais.
+- Não foram criados índices indiscriminados em colunas textuais ou calculadas.
+- O ganho de performance no dataset atual pode ser pequeno, pois o volume é didático; o objetivo principal é demonstrar critério técnico de DBA.
+
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v1.1.0` | Índices, performance e análise de plano de execução. |
 | `v1.2.0` | Stored procedures operacionais e analíticas. |
 | `v1.3.0` | Auditoria, histórico e rastreabilidade. |
 | `v1.4.0` | Backup, restore e validação pós-recuperação. |

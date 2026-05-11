@@ -44,11 +44,14 @@ QualidadeAmbiental_SQLServer/
 |   |-- dicionario_dados.md
 |   |-- evidencias_validacao.md
 |   |-- modelo_dados.md
+|   |-- performance_indices.md
 |   |-- regras_negocio.md
 |   `-- relatorios.md
 |-- scripts/
 |-- sql/
 |   |-- migrations/
+|   |   |-- 2026-05-11_v1.1.0_indices_performance.sql
+|   |   `-- .gitkeep
 |   |-- 01_create_database.sql
 |   |-- 02_create_tables.sql
 |   |-- 03_insert_cadastros.sql
@@ -79,6 +82,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/relatorios.md`: documenta views, consultas analíticas, indicadores, interpretações e prints recomendados para portfólio.
 - `docs/dicionario_dados.md`: dicionário de dados técnico com tabelas, colunas, tipos de dados, chaves, constraints e relacionamentos.
 - `docs/evidencias_validacao.md`: documenta as validações executadas, os resultados confirmados e as evidências visuais registradas.
+- `docs/performance_indices.md`: documenta a fase `v1.1.0`, os índices criados, critérios técnicos, trade-offs e orientações de análise de plano de execução.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -345,7 +349,7 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | Versão | Foco | Objetivo técnico |
 | --- | --- | --- |
 | `v1.0.0` | Publicação inicial | Base relacional, dados didáticos, views, consultas analíticas, documentação e evidências. |
-| `v1.1.0` | Índices e performance | Criar índices orientados por consultas reais, analisar planos de execução e documentar ganhos ou trade-offs. |
+| `v1.1.0` | Índices e performance | Índices incrementais para consultas analíticas, critérios técnicos, trade-offs e análise de plano de execução. |
 | `v1.2.0` | Stored procedures | Criar procedures úteis para operações e relatórios, evitando objetos artificiais sem valor de negócio. |
 | `v1.3.0` | Auditoria e histórico | Adicionar rastreabilidade para alterações relevantes, especialmente resultados e limites de referência. |
 | `v1.4.0` | Backup e restore | Documentar e implementar scripts operacionais de backup, restore e validação pós-recuperação. |
@@ -388,7 +392,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.0.0` publicada no GitHub, com estrutura principal criada, scripts executados e validações finais confirmadas.
+Status: `v1.1.0` em preparação, com a fase de índices e performance adicionada em script incremental e documentação técnica.
 
 Já foi concluído:
 
@@ -410,11 +414,14 @@ Já foi concluído:
 - documentação de relatórios, views e indicadores em `docs/relatorios.md`;
 - dicionário de dados técnico em `docs/dicionario_dados.md`;
 - documentação de evidências de validação em `docs/evidencias_validacao.md`;
-- prints de validação registrados em `docs/evidencias/`.
+- prints de validação registrados em `docs/evidencias/`;
+- script incremental de índices e performance em `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql`;
+- documentação da fase `v1.1.0` em `docs/performance_indices.md`.
 
 Ainda precisa ser concluído:
 
-- evolução da fase `v1.1.0` com índices, performance e análise de plano de execução.
+- execução da migration `v1.1.0` no SQL Server Management Studio;
+- análise visual do plano de execução das consultas analíticas após a criação dos índices.
 
 ## Pendências identificadas
 
