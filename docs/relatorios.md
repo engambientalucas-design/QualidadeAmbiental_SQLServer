@@ -345,7 +345,6 @@ Prints recomendados:
 - Resultado de `VW_RankingParametrosCriticos`.
 - Resultado de `VW_EficienciaRemocaoETE`.
 - Estrutura das views oficiais no SSMS.
-- Dashboard HTML do projeto, se usado como demonstracao visual complementar.
 
 Essas evidencias ajudam a mostrar fluxo completo: modelagem, carga, validacao, analise e comunicacao dos resultados.
 
@@ -369,6 +368,7 @@ Essas evidencias ajudam a mostrar fluxo completo: modelagem, carga, validacao, a
 - Criar vigencia de limites para permitir comparacoes historicas.
 - Parametrizar a regra da ETE por IDs ou tabela de configuracao.
 - Criar visoes ou consultas especificas para dashboards.
+- Avaliar camada visual executiva em fase futura, como Power BI ou outra ferramenta de visualizacao.
 - Revisar limites com base normativa real apenas se o projeto deixar de ser didatico.
 
 ## Resumo final

@@ -26,7 +26,6 @@ Versão inicial publicável do projeto `QualidadeAmbiental_SQLServer`.
 - Consultas analíticas e checklist final de validação.
 - Documentação técnica em `docs/`.
 - Evidências visuais de execução e validação em `docs/evidencias/`.
-- Dashboard HTML didático para apresentação dos indicadores.
 
 ### Validado
 

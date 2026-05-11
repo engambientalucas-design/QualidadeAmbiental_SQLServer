@@ -59,9 +59,6 @@ QualidadeAmbiental_SQLServer/
 |   |-- 05_views_oficiais.sql
 |   `-- 06_consultas_analiticas.sql
 |-- CHANGELOG.md
-|-- dados.csv
-|-- dashboard_qualidade_agua.html
-|-- dashboard_qualidade_agua_final.html
 `-- README.md
 ```
 
