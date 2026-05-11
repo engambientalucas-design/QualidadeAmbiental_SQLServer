@@ -392,7 +392,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.1.0` em preparação, com a fase de índices e performance adicionada em script incremental e documentação técnica.
+Status: `v1.1.0` implementada e validada tecnicamente no SQL Server Management Studio, com índices incrementais, documentação técnica e análise de plano de execução.
 
 Já foi concluído:
 
@@ -416,12 +416,15 @@ Já foi concluído:
 - documentação de evidências de validação em `docs/evidencias_validacao.md`;
 - prints de validação registrados em `docs/evidencias/`;
 - script incremental de índices e performance em `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql`;
-- documentação da fase `v1.1.0` em `docs/performance_indices.md`.
+- documentação da fase `v1.1.0` em `docs/performance_indices.md`;
+- evidências visuais da fase `v1.1.0` registradas em `docs/evidencias/`;
+- execução e validação da migration `v1.1.0` no SQL Server Management Studio;
+- confirmação de que os indicadores finais permaneceram consistentes após a criação dos índices;
+- análise de plano de execução real para consultas analíticas da fase.
 
 Ainda precisa ser concluído:
 
-- execução da migration `v1.1.0` no SQL Server Management Studio;
-- análise visual do plano de execução das consultas analíticas após a criação dos índices.
+- criação da tag `v1.1.0` após commit e publicação dos ajustes finais da documentação.
 
 ## Pendências identificadas
 

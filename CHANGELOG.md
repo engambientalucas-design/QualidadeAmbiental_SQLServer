@@ -53,12 +53,23 @@ Fase dedicada a índices, performance e análise de plano de execução.
 - Índice `IX_Tbl_ResultadosAnalise_Parametro_Amostra` para complementar a unicidade existente e favorecer análises que partem de parâmetro ambiental.
 - Consultas de verificação dos índices criados via catálogo do SQL Server.
 - Documento `docs/performance_indices.md` com justificativas, trade-offs e orientações de análise de plano de execução.
+- Evidências visuais da fase `v1.1.0` em `docs/evidencias/`, cobrindo criação dos índices, colunas, validação dos totais e planos de execução.
+
+### Validado
+
+- Migration `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql` executada com sucesso no SQL Server Management Studio.
+- Índices confirmados em `sys.indexes`, com `is_disabled = 0`.
+- Colunas-chave e colunas incluídas confirmadas em `sys.index_columns`.
+- Indicadores finais permaneceram consistentes após a criação dos índices: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes e 7 não conformes.
+- Plano de execução real analisado no SSMS para consultas analíticas como ranking de parâmetros críticos e eficiência de remoção da ETE.
+- Prints `09` a `13` registrados para comprovar visualmente a validação da fase.
 
 ### Observações
 
 - Os índices foram definidos de forma conservadora, priorizando tabelas operacionais e consultas analíticas reais.
 - Não foram criados índices indiscriminados em colunas textuais ou calculadas.
-- O ganho de performance no dataset atual pode ser pequeno, pois o volume é didático; o objetivo principal é demonstrar critério técnico de DBA.
+- Não foi feita medição formal de ganho de tempo. Como o volume atual é didático e pequeno, não é adequado afirmar ganho real de performance.
+- O objetivo principal é demonstrar critério técnico de DBA, validação por catálogo do SQL Server e análise de plano de execução.
 
 ## Próximas versões planejadas
 

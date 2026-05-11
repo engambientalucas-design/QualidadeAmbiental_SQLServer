@@ -69,6 +69,20 @@ Os prints recomendados foram capturados e salvos na pasta `docs/evidencias/`.
 | `docs/evidencias/07_eficiencia_remocao_ete.png` | `VW_EficienciaRemocaoETE` | Percentual de remocao entre `Esgoto Bruto` e `Esgoto Tratado` pelo mesmo parametro e mesma data de coleta. | Registrado |
 | `docs/evidencias/08_views_oficiais_ssms.png` | Views criadas no SSMS | Existencia das views oficiais no banco `QualidadeAmbiental`. | Registrado |
 
+## Evidencias da v1.1.0 - Indices e performance
+
+A fase `v1.1.0` adicionou evidencias visuais especificas para validar a criacao dos indices, a estrutura das colunas, a preservacao dos indicadores finais e a analise de plano de execucao real no SQL Server Management Studio.
+
+| Arquivo | Consulta, script ou recurso relacionado | O que demonstra | Status |
+| --- | --- | --- | --- |
+| `docs/evidencias/09_indices_v1_1_criados.png` | `sys.indexes` apos a migration `v1.1.0` | Confirma a existencia dos indices `IX_Tbl_Amostras_DataColeta_Tipo_Ponto` e `IX_Tbl_ResultadosAnalise_Parametro_Amostra`, ambos ativos. | Registrado |
+| `docs/evidencias/10_indices_v1_1_colunas.png` | `sys.index_columns` e `sys.columns` | Confirma as colunas-chave e colunas incluidas dos indices criados na fase `v1.1.0`. | Registrado |
+| `docs/evidencias/11_validacao_totais_pos_indices.png` | Validacao consolidada de `VW_ConformidadeResultados` | Confirma que os totais analiticos permaneceram consistentes apos a criacao dos indices: 72 resultados, 57 com limite, 15 sem limite, 50 conformes e 7 nao conformes. | Registrado |
+| `docs/evidencias/12_plano_execucao_ranking_parametros.png` | Plano de execucao real de consulta sobre `VW_RankingParametrosCriticos` | Demonstra a analise do plano de execucao real para ranking de parametros criticos. | Registrado |
+| `docs/evidencias/13_plano_execucao_eficiencia_ete.png` | Plano de execucao real de consulta sobre `VW_EficienciaRemocaoETE` | Demonstra a analise do plano de execucao real para eficiencia de remocao da ETE. | Registrado |
+
+Essas evidencias nao comprovam ganho formal de tempo de execucao. Como o dataset atual e didatico e pequeno, elas devem ser interpretadas como validacao tecnica dos indices, da consistencia dos resultados e do processo de analise de plano de execucao.
+
 ## Como capturar os prints no SSMS
 
 Procedimento recomendado:

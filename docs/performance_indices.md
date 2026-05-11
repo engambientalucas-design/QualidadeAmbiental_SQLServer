@@ -178,6 +178,115 @@ O script da `v1.1.0` inclui consultas finais em `sys.indexes`, `sys.index_column
 - colunas chave;
 - colunas incluidas.
 
+## Validacao executada no SSMS
+
+A migration `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql` foi executada com sucesso no SQL Server Management Studio.
+
+Foram criados e validados os seguintes indices:
+
+### IX_Tbl_Amostras_DataColeta_Tipo_Ponto
+
+Tabela:
+
+```text
+dbo.Tbl_Amostras
+```
+
+Tipo:
+
+```text
+NONCLUSTERED
+```
+
+Status:
+
+```text
+Ativo, com is_disabled = 0
+```
+
+Colunas chave:
+
+```text
+DataColeta, IdTipoAmostra, IdPontoColeta
+```
+
+Colunas incluidas:
+
+```text
+CodigoAmostra, IdResponsavel, IdStatus
+```
+
+### IX_Tbl_ResultadosAnalise_Parametro_Amostra
+
+Tabela:
+
+```text
+dbo.Tbl_ResultadosAnalise
+```
+
+Tipo:
+
+```text
+NONCLUSTERED
+```
+
+Status:
+
+```text
+Ativo, com is_disabled = 0
+```
+
+Colunas chave:
+
+```text
+IdParametro, IdAmostra
+```
+
+Colunas incluidas:
+
+```text
+ValorResultado, UnidadeMedida, DataAnalise, MetodoAnalise
+```
+
+### Validacao dos indicadores
+
+Apos a criacao dos indices, os indicadores finais permaneceram consistentes:
+
+| Indicador | Valor confirmado |
+| --- | ---: |
+| Total de resultados analiticos | 72 |
+| Resultados com limite | 57 |
+| Resultados sem limite | 15 |
+| Conformes com limite | 50 |
+| Nao conformes com limite | 7 |
+
+Essa validacao confirma que os indices nao alteraram a logica dos dados nem os resultados analiticos esperados. A alteracao foi estrutural, voltada a caminhos de acesso e preparacao para crescimento.
+
+### Plano de execucao real
+
+O recurso de plano de execucao real do SSMS foi ativado para analisar consultas analiticas da fase, incluindo:
+
+- `VW_RankingParametrosCriticos`;
+- `VW_EficienciaRemocaoETE`.
+
+Na consulta de ranking de parametros criticos, foi observada operacao de busca em indice nao clusterizado na tabela `Tbl_ResultadosAnalise`, indicando compatibilidade do indice novo com o padrao de acesso da consulta.
+
+Nao foi feita medicao formal de ganho de tempo. Como o dataset atual e didatico e pequeno, com 72 resultados analiticos, nao e adequado afirmar ganho real de performance. O valor tecnico da fase esta na escolha seletiva dos indices, na validacao por catalogo do SQL Server e na analise de plano de execucao.
+
+### Evidencias visuais
+
+As evidencias visuais da `v1.1.0` foram capturadas e salvas em `docs/evidencias/`:
+
+| Arquivo | Evidencia |
+| --- | --- |
+| `docs/evidencias/09_indices_v1_1_criados.png` | Indices criados e ativos em `sys.indexes`. |
+| `docs/evidencias/10_indices_v1_1_colunas.png` | Colunas-chave e colunas incluidas dos indices em `sys.index_columns`. |
+| `docs/evidencias/11_validacao_totais_pos_indices.png` | Totais analiticos preservados apos a criacao dos indices. |
+| `docs/evidencias/12_plano_execucao_ranking_parametros.png` | Plano de execucao real para ranking de parametros criticos. |
+| `docs/evidencias/13_plano_execucao_eficiencia_ete.png` | Plano de execucao real para eficiencia de remocao da ETE. |
+
+Esses prints reforcam a rastreabilidade da fase, mas nao representam medicao formal de ganho de performance.
+
 ## Resumo
 
 A fase `v1.1.0` adiciona dois indices nao clusterizados focados nas tabelas operacionais mais importantes:
@@ -185,4 +294,4 @@ A fase `v1.1.0` adiciona dois indices nao clusterizados focados nas tabelas oper
 - `Tbl_Amostras`;
 - `Tbl_ResultadosAnalise`.
 
-Essa escolha preserva a simplicidade do projeto, melhora a preparacao para crescimento e demonstra criterio tecnico ao priorizar consultas analiticas reais em vez de criar indices indiscriminadamente.
+Essa escolha preserva a simplicidade do projeto, melhora a preparacao para crescimento e demonstra criterio tecnico ao priorizar consultas analiticas reais em vez de criar indices indiscriminadamente. A migration foi executada e validada no SSMS, mantendo os indicadores finais do projeto consistentes.
