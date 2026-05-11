@@ -370,6 +370,7 @@ Estado atual do versionamento:
 
 - A versão `v1.0.0` representa a base estável da publicação inicial no GitHub.
 - A tag anotada `v1.0.0` já foi criada e publicada no GitHub, apontando para o commit da versão inicial publicável.
+- A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
@@ -424,7 +425,7 @@ Já foi concluído:
 
 Ainda precisa ser concluído:
 
-- criação da tag `v1.1.0` após commit e publicação dos ajustes finais da documentação.
+- evolução da fase `v1.2.0` com stored procedures operacionais e analíticas.
 
 ## Pendências identificadas
 
