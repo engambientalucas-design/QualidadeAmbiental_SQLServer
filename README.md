@@ -414,7 +414,7 @@ Estado atual do versionamento:
 - A versão `v1.0.0` representa a base estável da publicação inicial no GitHub.
 - A tag anotada `v1.0.0` já foi criada e publicada no GitHub, apontando para o commit da versão inicial publicável.
 - A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
-- A versão `v1.2.0` foi implementada e validada localmente, com stored procedures analíticas parametrizadas e evidências visuais registradas.
+- A tag anotada `v1.2.0` já foi criada e publicada no GitHub, apontando para a versão de stored procedures analíticas parametrizadas, validações no SQL Server Management Studio e evidências visuais registradas.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
