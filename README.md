@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v1.1.0` - índices incrementais, documentação técnica de performance, validação no SQL Server Management Studio e evidências de plano de execução.
+Versão atual: `v1.2.0` - stored procedures analíticas parametrizadas, validação no SQL Server Management Studio e evidências visuais de criação, execução e tratamento de erros.
 
 ## Objetivo do projeto
 
@@ -46,11 +46,13 @@ QualidadeAmbiental_SQLServer/
 |   |-- modelo_dados.md
 |   |-- performance_indices.md
 |   |-- regras_negocio.md
+|   |-- stored_procedures.md
 |   `-- relatorios.md
 |-- scripts/
 |-- sql/
 |   |-- migrations/
 |   |   |-- 2026-05-11_v1.1.0_indices_performance.sql
+|   |   |-- 2026-05-12_v1.2.0_stored_procedures.sql
 |   |   `-- .gitkeep
 |   |-- 01_create_database.sql
 |   |-- 02_create_tables.sql
@@ -80,6 +82,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/dicionario_dados.md`: dicionário de dados técnico com tabelas, colunas, tipos de dados, chaves, constraints e relacionamentos.
 - `docs/evidencias_validacao.md`: documenta as validações executadas, os resultados confirmados e as evidências visuais registradas.
 - `docs/performance_indices.md`: documenta a fase `v1.1.0`, os índices criados, critérios técnicos, trade-offs e orientações de análise de plano de execução.
+- `docs/stored_procedures.md`: documenta a fase `v1.2.0`, os critérios para procedures analíticas parametrizadas, rotinas implementadas, validações e evidências.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -103,6 +106,12 @@ Os scripts devem ser executados preferencialmente no SQL Server Management Studi
 
 6. `sql/06_consultas_analiticas.sql`
    - Contém consultas de validação, exploração e relatórios analíticos.
+
+7. `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql`
+   - Cria índices incrementais para apoiar consultas analíticas e valida sua existência no catálogo do SQL Server.
+
+8. `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`
+   - Cria stored procedures analíticas parametrizadas e valida sua existência em `sys.procedures`.
 
 ## Modelo de dados resumido
 
@@ -199,6 +208,18 @@ Ordena parâmetros ambientais por quantidade e proporção de não conformidades
 
 Lista resultados analíticos que ainda não possuem limite de referência cadastrado.
 
+## Stored procedures analíticas
+
+A fase `v1.2.0` adicionou stored procedures analíticas parametrizadas, mantendo as regras de conformidade centralizadas nas views oficiais.
+
+Procedures criadas:
+
+- `dbo.usp_ConformidadePorPeriodo`: consolida indicadores de conformidade por período, tipo de amostra e ponto de coleta.
+- `dbo.usp_ResultadosForaPadrao`: lista resultados acima ou abaixo dos limites didáticos com filtros opcionais.
+- `dbo.usp_RankingParametrosCriticos`: gera ranking de parâmetros críticos com `TOP N` e filtros opcionais.
+
+As procedures usam `CREATE OR ALTER PROCEDURE`, schema explícito `dbo`, prefixo `usp_`, `SET NOCOUNT ON` e validações com `THROW` para período inválido e `@TopN` inválido.
+
 ## Principais indicadores ambientais
 
 Os indicadores esperados para o projeto incluem:
@@ -290,6 +311,21 @@ Esta seção registra decisões e avanços entre os arquivos oficiais para facil
 - Valida cadastros, amostras, resultados analíticos, classificações, resultados fora do padrão, resultados sem limite, conformidade mensal, ranking de parâmetros críticos e eficiência de remoção.
 - Inclui um checklist final com coluna de situação para indicar `OK` ou `DIVERGENTE` nos principais números esperados.
 
+### Migration 2026-05-11_v1.1.0_indices_performance.sql
+
+- Cria índices não clusterizados incrementais para apoiar consultas analíticas.
+- Valida os índices criados por meio do catálogo do SQL Server.
+- Mantém os indicadores analíticos finais consistentes após a alteração estrutural.
+
+### Migration 2026-05-12_v1.2.0_stored_procedures.sql
+
+- Cria as procedures `dbo.usp_ConformidadePorPeriodo`, `dbo.usp_ResultadosForaPadrao` e `dbo.usp_RankingParametrosCriticos`.
+- Mantém as procedures como rotinas analíticas e somente leitura.
+- Usa as views oficiais como fonte das regras de conformidade.
+- Valida período inválido com `THROW`.
+- Valida `@TopN` menor ou igual a zero com `THROW`.
+- Mantém exemplos de execução comentados para uso manual no SSMS e captura de evidências.
+
 ## Como validar o banco
 
 Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados. No estado atual do projeto, os scripts oficiais foram executados no SQL Server Management Studio e o checklist final retornou `OK` para os principais indicadores.
@@ -320,6 +356,14 @@ Validações consolidadas confirmadas:
 
 Essas validações estão organizadas no arquivo `sql/06_consultas_analiticas.sql`.
 
+Validações da fase `v1.2.0`:
+
+- As procedures `dbo.usp_ConformidadePorPeriodo`, `dbo.usp_ResultadosForaPadrao` e `dbo.usp_RankingParametrosCriticos` foram criadas e confirmadas em `sys.procedures`.
+- `dbo.usp_ConformidadePorPeriodo` confirmou os totais consolidados: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+- `dbo.usp_ResultadosForaPadrao` retornou 7 resultados fora do padrão no período validado.
+- `dbo.usp_RankingParametrosCriticos` retornou ranking com `@TopN = 5`.
+- Os erros esperados para período inválido e `@TopN = 0` foram validados com `THROW`.
+
 ## Como continuar o projeto
 
 Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente:
@@ -334,8 +378,10 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 8. Consultar `docs/relatorios.md` para entender views, consultas e indicadores.
 9. Consultar `docs/dicionario_dados.md` para referência coluna a coluna.
 10. Consultar `docs/evidencias_validacao.md` e `docs/evidencias/` para verificar as evidências visuais registradas.
-11. Registrar qualquer correção incremental em `sql/migrations/`.
-12. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+11. Executar as migrations incrementais em `sql/migrations/`, quando aplicável.
+12. Consultar `docs/stored_procedures.md` para entender a fase `v1.2.0`.
+13. Registrar qualquer correção incremental em `sql/migrations/`.
+14. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
@@ -347,7 +393,7 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | --- | --- | --- |
 | `v1.0.0` | Publicação inicial | Base relacional, dados didáticos, views, consultas analíticas, documentação e evidências. |
 | `v1.1.0` | Índices e performance | Índices incrementais para consultas analíticas, critérios técnicos, trade-offs e análise de plano de execução. |
-| `v1.2.0` | Stored procedures | Criar procedures úteis para operações e relatórios, evitando objetos artificiais sem valor de negócio. |
+| `v1.2.0` | Stored procedures | Criar procedures analíticas parametrizadas, validadas no SSMS e alinhadas às views oficiais. |
 | `v1.3.0` | Auditoria e histórico | Adicionar rastreabilidade para alterações relevantes, especialmente resultados e limites de referência. |
 | `v1.4.0` | Backup e restore | Documentar e implementar scripts operacionais de backup, restore e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação | Criar fluxo de carga com staging, validação, tratamento de inconsistências e carga final. |
@@ -368,6 +414,7 @@ Estado atual do versionamento:
 - A versão `v1.0.0` representa a base estável da publicação inicial no GitHub.
 - A tag anotada `v1.0.0` já foi criada e publicada no GitHub, apontando para o commit da versão inicial publicável.
 - A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
+- A versão `v1.2.0` foi implementada e validada localmente, com stored procedures analíticas parametrizadas e evidências visuais registradas.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
@@ -390,7 +437,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.1.0` implementada e validada tecnicamente no SQL Server Management Studio, com índices incrementais, documentação técnica e análise de plano de execução.
+Status: `v1.2.0` implementada e validada tecnicamente no SQL Server Management Studio, com stored procedures analíticas parametrizadas, documentação técnica e evidências visuais.
 
 Já foi concluído:
 
@@ -419,10 +466,13 @@ Já foi concluído:
 - execução e validação da migration `v1.1.0` no SQL Server Management Studio;
 - confirmação de que os indicadores finais permaneceram consistentes após a criação dos índices;
 - análise de plano de execução real para consultas analíticas da fase.
-
-Ainda precisa ser concluído:
-
-- evolução da fase `v1.2.0` com stored procedures operacionais e analíticas.
+- documentação da fase `v1.2.0` em `docs/stored_procedures.md`;
+- script incremental de stored procedures em `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`;
+- execução e validação da migration `v1.2.0` no SQL Server Management Studio;
+- criação das procedures `dbo.usp_ConformidadePorPeriodo`, `dbo.usp_ResultadosForaPadrao` e `dbo.usp_RankingParametrosCriticos`;
+- validação de execução das procedures com parâmetros válidos;
+- validação de erros esperados para período inválido e `@TopN` inválido;
+- evidências visuais da fase `v1.2.0` registradas em `docs/evidencias/`.
 
 ## Pendências identificadas
 

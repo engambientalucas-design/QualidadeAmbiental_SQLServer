@@ -2,15 +2,15 @@
 
 ## 1. Objetivo da fase v1.2.0
 
-A fase `v1.2.0` tem como objetivo planejar a criacao de stored procedures analiticas parametrizadas para o projeto `QualidadeAmbiental_SQLServer`.
+A fase `v1.2.0` tem como objetivo planejar, implementar e validar stored procedures analiticas parametrizadas para o projeto `QualidadeAmbiental_SQLServer`.
 
-Esta etapa nao implementa procedures. O objetivo e definir um conjunto pequeno, funcional e justificavel de rotinas que podera orientar a criacao futura do script:
+O planejamento orientou a criacao de um conjunto pequeno, funcional e justificavel de rotinas no script:
 
 ```text
 sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql
 ```
 
-As procedures planejadas devem apoiar consultas recorrentes, filtros analiticos, validacoes de entrada e geracao de evidencias no SQL Server Management Studio.
+As procedures criadas apoiam consultas recorrentes, filtros analiticos, validacoes de entrada e geracao de evidencias no SQL Server Management Studio.
 
 ## 2. Situacao atual do projeto
 
@@ -66,9 +66,9 @@ Os criterios adotados sao:
 
 Se uma procedure nao tiver parametro util, validacao real ou ganho claro sobre uma view simples, ela deve ser adiada ou descartada.
 
-## 6. Candidatas fortes para implementacao inicial
+## 6. Procedures implementadas
 
-Para a fase `v1.2.0`, as candidatas fortes sao:
+Para a fase `v1.2.0`, foram implementadas as seguintes procedures:
 
 1. `dbo.usp_ConformidadePorPeriodo`
 2. `dbo.usp_ResultadosForaPadrao`
@@ -109,7 +109,7 @@ O parametro `@SomenteNaoConformes` nao deve ser usado nas candidatas iniciais po
 
 ## 10. Validacoes de parametros
 
-A implementacao futura deve considerar:
+A implementacao realizada considera:
 
 - `@DataInicio` nao pode ser maior que `@DataFim`;
 - `@TopN` deve ser positivo quando informado;
@@ -118,11 +118,11 @@ A implementacao futura deve considerar:
 - nenhuma procedure deve alterar dados;
 - nenhuma procedure deve criar regra de conformidade fora das views oficiais.
 
-Validacoes de existencia de IDs podem ser avaliadas na implementacao, mas devem ser usadas com criterio para nao transformar procedures analiticas simples em rotinas excessivamente verbosas.
+Validacoes de existencia de IDs foram mantidas fora desta fase para nao transformar procedures analiticas simples em rotinas excessivamente verbosas.
 
-## 11. Padrao tecnico de implementacao futura
+## 11. Padrao tecnico aplicado
 
-O script futuro deve seguir um padrao consistente:
+O script `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` segue um padrao consistente:
 
 - usar `CREATE OR ALTER PROCEDURE`;
 - usar schema explicito `dbo`;
@@ -136,23 +136,23 @@ O script futuro deve seguir um padrao consistente:
 
 Nao deve ser usado prefixo `SP_` ou `sp_`.
 
-## 12. Regras de validacao no SSMS
+## 12. Validacao no SSMS
 
-As procedures futuras devem ser validadas manualmente no SQL Server Management Studio apos a execucao da migration.
+A migration `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` foi executada e validada manualmente no SQL Server Management Studio.
 
-Validacoes recomendadas:
+Validacoes realizadas:
 
-- executar cada procedure com parametros nulos;
-- executar cada procedure com periodo especifico;
-- testar erro de `@DataInicio` maior que `@DataFim`;
-- testar `@TopN` invalido em `dbo.usp_RankingParametrosCriticos`;
-- comparar totais principais com as consultas analiticas ja documentadas;
-- confirmar que nenhuma procedure altera dados;
-- confirmar que as saidas estao coerentes com as views oficiais.
+- criacao das tres procedures confirmada em `sys.procedures`;
+- execucao de `dbo.usp_ConformidadePorPeriodo` com periodo valido;
+- execucao de `dbo.usp_ResultadosForaPadrao` com periodo valido;
+- execucao de `dbo.usp_RankingParametrosCriticos` com `@TopN` valido e periodo valido;
+- validacao de erro para `@DataInicio` maior que `@DataFim`;
+- validacao de erro para `@TopN` menor ou igual a zero;
+- confirmacao de que as saidas permanecem coerentes com as views oficiais e indicadores documentados.
 
 ## 13. Estrategia de evidencias visuais
 
-As evidencias visuais da v1.2.0 devem registrar:
+As evidencias visuais da v1.2.0 registram:
 
 - criacao bem-sucedida das procedures no SSMS;
 - execucao de `dbo.usp_ConformidadePorPeriodo`;
@@ -162,7 +162,16 @@ As evidencias visuais da v1.2.0 devem registrar:
 - validacao de erro para `@TopN` invalido;
 - comparacao dos resultados com as views ou consultas analiticas oficiais.
 
-Os prints devem ser salvos em `docs/evidencias/`, seguindo a numeracao ja usada nas fases anteriores.
+Os prints foram salvos em `docs/evidencias/`, seguindo a numeracao ja usada nas fases anteriores.
+
+| Arquivo | Evidencia |
+| --- | --- |
+| `docs/evidencias/14_procedures_v1_2_criadas.png` | Procedures criadas e confirmadas em `sys.procedures`. |
+| `docs/evidencias/15_exec_usp_conformidade_por_periodo.png` | Execucao de `dbo.usp_ConformidadePorPeriodo` com periodo valido. |
+| `docs/evidencias/16_exec_usp_resultados_fora_padrao.png` | Execucao de `dbo.usp_ResultadosForaPadrao` com periodo valido. |
+| `docs/evidencias/17_exec_usp_ranking_parametros_criticos.png` | Execucao de `dbo.usp_RankingParametrosCriticos` com `@TopN` valido. |
+| `docs/evidencias/18_validacao_erro_periodo_invalido.png` | Validacao de erro para periodo invalido. |
+| `docs/evidencias/19_validacao_erro_topn_invalido.png` | Validacao de erro para `@TopN` invalido. |
 
 ## 14. Riscos de criar procedures artificiais
 
@@ -178,18 +187,16 @@ Esse risco deve ser evitado porque:
 
 Por isso, a fase deve permanecer enxuta e priorizar procedures com parametros, validacoes e uso recorrente demonstravel.
 
-## 15. Entregas previstas para v1.2.0
+## 15. Entregas realizadas na v1.2.0
 
-As entregas previstas sao:
+As entregas realizadas sao:
 
 - documento de planejamento `docs/stored_procedures.md`;
-- script futuro `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`;
+- script `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`;
 - criacao das procedures analiticas recomendadas;
 - validacoes no SSMS;
-- evidencias visuais da criacao e execucao;
-- atualizacao futura de `README.md` e `CHANGELOG.md` apos implementacao e validacao.
-
-Nesta etapa, somente o documento de planejamento e criado.
+- evidencias visuais da criacao, execucao e validacoes de erro;
+- atualizacao de `README.md` e `CHANGELOG.md` apos implementacao e validacao.
 
 ## 16. Limitacoes atuais
 
@@ -204,9 +211,9 @@ As limitacoes que devem orientar a v1.2.0 sao:
 
 ## 17. Resumo final
 
-A v1.2.0 deve criar poucas stored procedures, todas analiticas, parametrizadas e alinhadas as views oficiais.
+A v1.2.0 criou poucas stored procedures, todas analiticas, parametrizadas e alinhadas as views oficiais.
 
-As candidatas fortes para implementacao inicial sao:
+As procedures implementadas sao:
 
 - `dbo.usp_ConformidadePorPeriodo`;
 - `dbo.usp_ResultadosForaPadrao`;

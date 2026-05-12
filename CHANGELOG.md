@@ -70,11 +70,43 @@ Fase dedicada a índices, performance e análise de plano de execução.
 - Não foi feita medição formal de ganho de tempo. Como o volume atual é didático e pequeno, não é adequado afirmar ganho real de performance.
 - O objetivo principal é demonstrar critério técnico de DBA, validação por catálogo do SQL Server e análise de plano de execução.
 
+## [v1.2.0] - 2026-05-12 - Stored procedures analíticas parametrizadas
+
+Fase dedicada a stored procedures analíticas parametrizadas, com foco em rotinas úteis, validações de entrada e evidências no SQL Server Management Studio.
+
+### Adicionado
+
+- Documento `docs/stored_procedures.md` com planejamento, critérios técnicos, procedures escolhidas, ideias adiadas e estratégia de evidências.
+- Script incremental `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`.
+- Procedure `dbo.usp_ConformidadePorPeriodo` para consolidar indicadores de conformidade por período e filtros opcionais.
+- Procedure `dbo.usp_ResultadosForaPadrao` para listar resultados acima ou abaixo dos limites didáticos com filtros opcionais.
+- Procedure `dbo.usp_RankingParametrosCriticos` para gerar ranking parametrizado de parâmetros críticos com `@TopN`.
+- Validações com `THROW` para período inválido e `@TopN` menor ou igual a zero.
+- Evidências visuais da fase `v1.2.0` em `docs/evidencias/`, cobrindo criação das procedures, execuções válidas e validações de erro.
+
+### Validado
+
+- Migration `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` executada com sucesso no SQL Server Management Studio.
+- Procedures confirmadas em `sys.procedures`.
+- `dbo.usp_ConformidadePorPeriodo` retornou os totais consolidados esperados: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+- `dbo.usp_ResultadosForaPadrao` retornou 7 resultados fora do padrão no período validado.
+- `dbo.usp_RankingParametrosCriticos` retornou ranking com `@TopN = 5`.
+- Erro de período inválido validado com a mensagem `DataInicio nao pode ser maior que DataFim.`.
+- Erro de `@TopN = 0` validado com a mensagem `TopN deve ser maior que zero quando informado.`.
+- Prints `14` a `19` registrados para comprovar visualmente a validação da fase.
+
+### Observações
+
+- As procedures são analíticas e somente leitura.
+- A fase não adiciona procedures de `INSERT`, `UPDATE` ou `DELETE`.
+- As regras de conformidade continuam centralizadas nas views oficiais.
+- Os exemplos de `EXEC` permanecem comentados na migration para separar criação de objetos e execução manual de evidências.
+- Não se afirma ganho automático de performance com stored procedures; o valor técnico da fase está em parametrização, padronização, validação e reutilização controlada das views oficiais.
+
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v1.2.0` | Stored procedures operacionais e analíticas. |
 | `v1.3.0` | Auditoria, histórico e rastreabilidade. |
 | `v1.4.0` | Backup, restore e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação com staging e validação. |

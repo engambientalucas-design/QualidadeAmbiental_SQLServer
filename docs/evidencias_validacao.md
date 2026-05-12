@@ -31,6 +31,8 @@ Os scripts oficiais foram executados na seguinte ordem:
 | 4 | `sql/04_insert_amostras_resultados.sql` | Insercao de amostras e resultados analiticos. |
 | 5 | `sql/05_views_oficiais.sql` | Criacao das views oficiais de analise. |
 | 6 | `sql/06_consultas_analiticas.sql` | Execucao das consultas de validacao e relatorios analiticos. |
+| 7 | `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql` | Criacao e validacao de indices incrementais. |
+| 8 | `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` | Criacao e validacao de stored procedures analiticas parametrizadas. |
 
 ## Checklist final confirmado
 
@@ -46,7 +48,7 @@ O checklist final do projeto confirmou os principais totais esperados:
 
 Esses resultados demonstram consistencia entre a carga de dados, a matriz de limites didaticos e a view central `VW_ConformidadeResultados`.
 
-## Evidencias visuais planejadas
+## Evidencias visuais registradas
 
 As evidencias visuais devem ser salvas na pasta:
 
@@ -56,7 +58,7 @@ docs/evidencias/
 
 Os prints recomendados foram capturados e salvos na pasta `docs/evidencias/`.
 
-## Relacao de prints recomendados
+## Relacao de prints registrados
 
 | Arquivo | Consulta, script ou view relacionada | O que deve demonstrar | Status |
 | --- | --- | --- | --- |
@@ -82,6 +84,21 @@ A fase `v1.1.0` adicionou evidencias visuais especificas para validar a criacao 
 | `docs/evidencias/13_plano_execucao_eficiencia_ete.png` | Plano de execucao real de consulta sobre `VW_EficienciaRemocaoETE` | Demonstra a analise do plano de execucao real para eficiencia de remocao da ETE. | Registrado |
 
 Essas evidencias nao comprovam ganho formal de tempo de execucao. Como o dataset atual e didatico e pequeno, elas devem ser interpretadas como validacao tecnica dos indices, da consistencia dos resultados e do processo de analise de plano de execucao.
+
+## Evidencias da v1.2.0 - Stored procedures
+
+A fase `v1.2.0` adicionou evidencias visuais especificas para validar a criacao das stored procedures analiticas parametrizadas, suas execucoes com parametros validos e o tratamento de erros esperado.
+
+| Arquivo | Consulta, script ou recurso relacionado | O que demonstra | Status |
+| --- | --- | --- | --- |
+| `docs/evidencias/14_procedures_v1_2_criadas.png` | `sys.procedures` apos a migration `v1.2.0` | Confirma a existencia de `usp_ConformidadePorPeriodo`, `usp_ResultadosForaPadrao` e `usp_RankingParametrosCriticos`. | Registrado |
+| `docs/evidencias/15_exec_usp_conformidade_por_periodo.png` | `dbo.usp_ConformidadePorPeriodo` | Confirma os totais consolidados para periodo valido: 72 resultados, 57 com limite, 15 sem limite, 50 conformes e 7 nao conformes. | Registrado |
+| `docs/evidencias/16_exec_usp_resultados_fora_padrao.png` | `dbo.usp_ResultadosForaPadrao` | Confirma a listagem de 7 resultados fora do padrao no periodo validado. | Registrado |
+| `docs/evidencias/17_exec_usp_ranking_parametros_criticos.png` | `dbo.usp_RankingParametrosCriticos` | Confirma o ranking parametrizado com `@TopN = 5`. | Registrado |
+| `docs/evidencias/18_validacao_erro_periodo_invalido.png` | `THROW` em `dbo.usp_ConformidadePorPeriodo` | Confirma a validacao de erro quando `@DataInicio` e maior que `@DataFim`. | Registrado |
+| `docs/evidencias/19_validacao_erro_topn_invalido.png` | `THROW` em `dbo.usp_RankingParametrosCriticos` | Confirma a validacao de erro quando `@TopN` e menor ou igual a zero. | Registrado |
+
+Essas evidencias demonstram que as procedures foram criadas, executadas e validadas sem introduzir rotinas de escrita ou regras paralelas de conformidade.
 
 ## Como capturar os prints no SSMS
 
