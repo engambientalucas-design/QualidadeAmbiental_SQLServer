@@ -103,11 +103,42 @@ Fase dedicada a stored procedures analíticas parametrizadas, com foco em rotina
 - Os exemplos de `EXEC` permanecem comentados na migration para separar criação de objetos e execução manual de evidências.
 - Não se afirma ganho automático de performance com stored procedures; o valor técnico da fase está em parametrização, padronização, validação e reutilização controlada das views oficiais.
 
+## [v1.3.0] - 2026-05-12 - Auditoria, histórico e rastreabilidade
+
+Fase dedicada a auditoria, histórico e rastreabilidade de alterações em tabelas que afetam conformidade, indicadores e interpretação técnica dos resultados.
+
+### Adicionado
+
+- Documento `docs/auditoria_historico.md` com planejamento, critérios técnicos, tabelas auditadas, tabelas adiadas, riscos e estratégia de evidências.
+- Script incremental `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql`.
+- Tabela `dbo.Tbl_AuditoriaAlteracoes` para registrar eventos de auditoria com metadados da operação e snapshots de valores anteriores e novos.
+- Índice `IX_Tbl_AuditoriaAlteracoes_Tabela_Registro_Data` para apoiar consultas por tabela, registro afetado e data/hora da operação.
+- Trigger `dbo.TRG_Tbl_ResultadosAnalise_Auditoria` para auditar alterações em resultados analíticos.
+- Trigger `dbo.TRG_Tbl_LimitesReferencia_Auditoria` para auditar alterações em limites de referência.
+- Trigger `dbo.TRG_Tbl_Amostras_Auditoria` para auditar alterações em amostras.
+- Evidências visuais da fase `v1.3.0` em `docs/evidencias/`, cobrindo criação da tabela, criação das triggers, testes controlados de `UPDATE`, consulta geral da auditoria e validação dos indicadores finais.
+
+### Validado
+
+- Migration `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql` executada com sucesso no SQL Server Management Studio.
+- Tabela `dbo.Tbl_AuditoriaAlteracoes` confirmada em `sys.tables`.
+- Triggers de auditoria confirmadas em `sys.triggers` e ativas.
+- Foram registrados 8 eventos de auditoria do tipo `UPDATE`: 2 em `Tbl_ResultadosAnalise`, 4 em `Tbl_LimitesReferencia` e 2 em `Tbl_Amostras`.
+- Indicadores finais permaneceram consistentes após a auditoria: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+- Prints `20` a `26` registrados para comprovar visualmente a validação da fase.
+
+### Observações
+
+- A auditoria foi aplicada somente em tabelas com impacto direto em conformidade, indicadores ou interpretação técnica.
+- A fase não audita todas as tabelas do banco de forma indiscriminada.
+- A auditoria não substitui backup, restore, controle de acesso ou histórico temporal completo.
+- A validação inicial utilizou apenas `UPDATEs` controlados; testes de `DELETE` foram evitados para não comprometer os dados didáticos e os indicadores finais.
+- As triggers registram rastreabilidade das alterações, mas não recalculam regras de negócio nem substituem as views oficiais.
+
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v1.3.0` | Auditoria, histórico e rastreabilidade. |
 | `v1.4.0` | Backup, restore e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação com staging e validação. |
 | `v2.1.0` | Power BI e camada visual executiva. |

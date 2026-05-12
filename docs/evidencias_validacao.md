@@ -33,6 +33,7 @@ Os scripts oficiais foram executados na seguinte ordem:
 | 6 | `sql/06_consultas_analiticas.sql` | Execucao das consultas de validacao e relatorios analiticos. |
 | 7 | `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql` | Criacao e validacao de indices incrementais. |
 | 8 | `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` | Criacao e validacao de stored procedures analiticas parametrizadas. |
+| 9 | `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql` | Criacao e validacao de auditoria, historico e rastreabilidade. |
 
 ## Checklist final confirmado
 
@@ -99,6 +100,30 @@ A fase `v1.2.0` adicionou evidencias visuais especificas para validar a criacao 
 | `docs/evidencias/19_validacao_erro_topn_invalido.png` | `THROW` em `dbo.usp_RankingParametrosCriticos` | Confirma a validacao de erro quando `@TopN` e menor ou igual a zero. | Registrado |
 
 Essas evidencias demonstram que as procedures foram criadas, executadas e validadas sem introduzir rotinas de escrita ou regras paralelas de conformidade.
+
+## Evidencias da v1.3.0 - Auditoria, historico e rastreabilidade
+
+A fase `v1.3.0` adicionou evidencias visuais especificas para validar a tabela de auditoria, as triggers, os eventos auditados e a preservacao dos indicadores finais.
+
+| Arquivo | Consulta, script ou recurso relacionado | O que demonstra | Status |
+| --- | --- | --- | --- |
+| `docs/evidencias/20_tabela_auditoria_criada.png` | `sys.tables` apos a migration `v1.3.0` | Confirma a existencia de `dbo.Tbl_AuditoriaAlteracoes`. | Registrado |
+| `docs/evidencias/21_triggers_auditoria_criadas.png` | `sys.triggers` apos a migration `v1.3.0` | Confirma as triggers de auditoria criadas e ativas. | Registrado |
+| `docs/evidencias/22_update_auditado_resultados_analise.png` | `dbo.Tbl_ResultadosAnalise` e `dbo.Tbl_AuditoriaAlteracoes` | Confirma `UPDATE` auditado em resultado analitico. | Registrado |
+| `docs/evidencias/23_update_auditado_limites_referencia.png` | `dbo.Tbl_LimitesReferencia` e `dbo.Tbl_AuditoriaAlteracoes` | Confirma `UPDATE` auditado em limite de referencia. | Registrado |
+| `docs/evidencias/24_update_auditado_amostras.png` | `dbo.Tbl_Amostras` e `dbo.Tbl_AuditoriaAlteracoes` | Confirma `UPDATE` auditado em amostra. | Registrado |
+| `docs/evidencias/25_consulta_geral_auditoria.png` | `dbo.Tbl_AuditoriaAlteracoes` | Exibe eventos de auditoria registrados com metadados e snapshots. | Registrado |
+| `docs/evidencias/26_validacao_indicadores_pos_auditoria.png` | `dbo.VW_ConformidadeResultados` | Confirma que os indicadores finais permaneceram consistentes apos a auditoria. | Registrado |
+
+Totais confirmados na auditoria:
+
+| Tabela | Operacao | Total de eventos |
+| --- | --- | ---: |
+| `Tbl_ResultadosAnalise` | `UPDATE` | 2 |
+| `Tbl_LimitesReferencia` | `UPDATE` | 4 |
+| `Tbl_Amostras` | `UPDATE` | 2 |
+
+Total de eventos registrados: 8.
 
 ## Como capturar os prints no SSMS
 

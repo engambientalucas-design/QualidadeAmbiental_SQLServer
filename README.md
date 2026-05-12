@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v1.2.0` - stored procedures analíticas parametrizadas, validação no SQL Server Management Studio e evidências visuais de criação, execução e tratamento de erros.
+Versão atual: `v1.3.0` - auditoria, histórico e rastreabilidade para alterações relevantes, validação no SQL Server Management Studio e evidências visuais.
 
 ## Objetivo do projeto
 
@@ -46,6 +46,7 @@ QualidadeAmbiental_SQLServer/
 |   |-- modelo_dados.md
 |   |-- performance_indices.md
 |   |-- regras_negocio.md
+|   |-- auditoria_historico.md
 |   |-- stored_procedures.md
 |   `-- relatorios.md
 |-- scripts/
@@ -53,6 +54,7 @@ QualidadeAmbiental_SQLServer/
 |   |-- migrations/
 |   |   |-- 2026-05-11_v1.1.0_indices_performance.sql
 |   |   |-- 2026-05-12_v1.2.0_stored_procedures.sql
+|   |   |-- 2026-05-12_v1.3.0_auditoria_historico.sql
 |   |   `-- .gitkeep
 |   |-- 01_create_database.sql
 |   |-- 02_create_tables.sql
@@ -83,6 +85,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/evidencias_validacao.md`: documenta as validações executadas, os resultados confirmados e as evidências visuais registradas.
 - `docs/performance_indices.md`: documenta a fase `v1.1.0`, os índices criados, critérios técnicos, trade-offs e orientações de análise de plano de execução.
 - `docs/stored_procedures.md`: documenta a fase `v1.2.0`, os critérios para procedures analíticas parametrizadas, rotinas implementadas, validações e evidências.
+- `docs/auditoria_historico.md`: documenta a fase `v1.3.0`, os critérios de auditoria, tabelas auditadas, triggers, validações e evidências.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -112,6 +115,9 @@ Os scripts devem ser executados preferencialmente no SQL Server Management Studi
 
 8. `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql`
    - Cria stored procedures analíticas parametrizadas e valida sua existência em `sys.procedures`.
+
+9. `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql`
+   - Cria a tabela de auditoria, triggers para tabelas críticas e valida sua existência no catálogo do SQL Server.
 
 ## Modelo de dados resumido
 
@@ -220,6 +226,19 @@ Procedures criadas:
 
 As procedures usam `CREATE OR ALTER PROCEDURE`, schema explícito `dbo`, prefixo `usp_`, `SET NOCOUNT ON` e validações com `THROW` para período inválido e `@TopN` inválido.
 
+## Auditoria e rastreabilidade
+
+A fase `v1.3.0` adicionou uma camada enxuta de auditoria para alterações em tabelas que afetam conformidade, indicadores e interpretação dos dados.
+
+Objetos criados:
+
+- `dbo.Tbl_AuditoriaAlteracoes`: tabela única de auditoria.
+- `dbo.TRG_Tbl_ResultadosAnalise_Auditoria`: trigger para alterações em resultados analíticos.
+- `dbo.TRG_Tbl_LimitesReferencia_Auditoria`: trigger para alterações em limites de referência.
+- `dbo.TRG_Tbl_Amostras_Auditoria`: trigger para alterações em amostras.
+
+A auditoria registra metadados como tabela, registro afetado, operação, data/hora, usuário SQL, host, aplicação, valores anteriores e valores novos. A validação inicial usou `UPDATEs` controlados e preservou os indicadores finais do projeto.
+
 ## Principais indicadores ambientais
 
 Os indicadores esperados para o projeto incluem:
@@ -326,6 +345,15 @@ Esta seção registra decisões e avanços entre os arquivos oficiais para facil
 - Valida `@TopN` menor ou igual a zero com `THROW`.
 - Mantém exemplos de execução comentados para uso manual no SSMS e captura de evidências.
 
+### Migration 2026-05-12_v1.3.0_auditoria_historico.sql
+
+- Cria a tabela `dbo.Tbl_AuditoriaAlteracoes`.
+- Cria índice para consulta por tabela, registro e data da operação.
+- Cria triggers de auditoria para `Tbl_ResultadosAnalise`, `Tbl_LimitesReferencia` e `Tbl_Amostras`.
+- Registra `INSERT`, `UPDATE` e `DELETE` executados após a criação das triggers.
+- Armazena snapshots em `ValoresAnteriores` e `ValoresNovos`.
+- Mantém exemplos de validação manual comentados, com foco em `UPDATEs` controlados.
+
 ## Como validar o banco
 
 Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados. No estado atual do projeto, os scripts oficiais foram executados no SQL Server Management Studio e o checklist final retornou `OK` para os principais indicadores.
@@ -364,6 +392,13 @@ Validações da fase `v1.2.0`:
 - `dbo.usp_RankingParametrosCriticos` retornou ranking com `@TopN = 5`.
 - Os erros esperados para período inválido e `@TopN = 0` foram validados com `THROW`.
 
+Validações da fase `v1.3.0`:
+
+- A tabela `dbo.Tbl_AuditoriaAlteracoes` foi criada e confirmada em `sys.tables`.
+- As triggers `TRG_Tbl_ResultadosAnalise_Auditoria`, `TRG_Tbl_LimitesReferencia_Auditoria` e `TRG_Tbl_Amostras_Auditoria` foram criadas e confirmadas em `sys.triggers`.
+- Foram registrados 8 eventos de auditoria do tipo `UPDATE`: 2 em `Tbl_ResultadosAnalise`, 4 em `Tbl_LimitesReferencia` e 2 em `Tbl_Amostras`.
+- Os indicadores finais permaneceram consistentes após a auditoria: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+
 ## Como continuar o projeto
 
 Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente:
@@ -380,8 +415,9 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 10. Consultar `docs/evidencias_validacao.md` e `docs/evidencias/` para verificar as evidências visuais registradas.
 11. Executar as migrations incrementais em `sql/migrations/`, quando aplicável.
 12. Consultar `docs/stored_procedures.md` para entender a fase `v1.2.0`.
-13. Registrar qualquer correção incremental em `sql/migrations/`.
-14. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+13. Consultar `docs/auditoria_historico.md` para entender a fase `v1.3.0`.
+14. Registrar qualquer correção incremental em `sql/migrations/`.
+15. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
@@ -394,7 +430,7 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | `v1.0.0` | Publicação inicial | Base relacional, dados didáticos, views, consultas analíticas, documentação e evidências. |
 | `v1.1.0` | Índices e performance | Índices incrementais para consultas analíticas, critérios técnicos, trade-offs e análise de plano de execução. |
 | `v1.2.0` | Stored procedures | Criar procedures analíticas parametrizadas, validadas no SSMS e alinhadas às views oficiais. |
-| `v1.3.0` | Auditoria e histórico | Adicionar rastreabilidade para alterações relevantes, especialmente resultados e limites de referência. |
+| `v1.3.0` | Auditoria e histórico | Adicionar auditoria e rastreabilidade para alterações em resultados, limites e amostras. |
 | `v1.4.0` | Backup e restore | Documentar e implementar scripts operacionais de backup, restore e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação | Criar fluxo de carga com staging, validação, tratamento de inconsistências e carga final. |
 | `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
@@ -415,6 +451,7 @@ Estado atual do versionamento:
 - A tag anotada `v1.0.0` já foi criada e publicada no GitHub, apontando para o commit da versão inicial publicável.
 - A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
 - A tag anotada `v1.2.0` já foi criada e publicada no GitHub, apontando para a versão de stored procedures analíticas parametrizadas, validações no SQL Server Management Studio e evidências visuais registradas.
+- A tag anotada `v1.3.0` já foi criada e publicada no GitHub, apontando para a versão de auditoria, histórico, rastreabilidade, validações no SQL Server Management Studio e evidências visuais registradas.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
@@ -437,7 +474,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.2.0` implementada e validada tecnicamente no SQL Server Management Studio, com stored procedures analíticas parametrizadas, documentação técnica e evidências visuais.
+Status: `v1.3.0` implementada e validada tecnicamente no SQL Server Management Studio, com auditoria, histórico, rastreabilidade, documentação técnica e evidências visuais.
 
 Já foi concluído:
 
@@ -473,6 +510,14 @@ Já foi concluído:
 - validação de execução das procedures com parâmetros válidos;
 - validação de erros esperados para período inválido e `@TopN` inválido;
 - evidências visuais da fase `v1.2.0` registradas em `docs/evidencias/`.
+- documentação da fase `v1.3.0` em `docs/auditoria_historico.md`;
+- script incremental de auditoria em `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql`;
+- execução e validação da migration `v1.3.0` no SQL Server Management Studio;
+- criação da tabela `dbo.Tbl_AuditoriaAlteracoes`;
+- criação das triggers de auditoria para `Tbl_ResultadosAnalise`, `Tbl_LimitesReferencia` e `Tbl_Amostras`;
+- validação de eventos auditados com `UPDATEs` controlados;
+- confirmação de que os indicadores finais permaneceram consistentes após a auditoria;
+- evidências visuais da fase `v1.3.0` registradas em `docs/evidencias/`.
 
 ## Pendências identificadas
 

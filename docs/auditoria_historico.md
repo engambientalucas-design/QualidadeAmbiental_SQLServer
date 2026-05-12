@@ -2,21 +2,17 @@
 
 ## 1. Objetivo da fase v1.3.0
 
-A fase `v1.3.0` tem como objetivo planejar tecnicamente uma camada enxuta de auditoria, historico e rastreabilidade para o projeto `QualidadeAmbiental_SQLServer`.
+A fase `v1.3.0` tem como objetivo planejar, implementar e validar uma camada enxuta de auditoria, historico e rastreabilidade para o projeto `QualidadeAmbiental_SQLServer`.
 
-Esta etapa e apenas de planejamento. Nao cria tabelas de auditoria, triggers ou scripts SQL.
-
-O documento deve orientar a criacao futura de uma migration no padrao:
+O planejamento orientou a criacao da migration:
 
 ```text
-sql/migrations/YYYY-MM-DD_v1.3.0_auditoria_historico.sql
+sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql
 ```
-
-A data final do arquivo deve ser definida no momento da implementacao da fase.
 
 ## 2. Situacao atual do projeto
 
-O projeto esta na versao `v1.2.0`, publicada com stored procedures analiticas parametrizadas, validacoes no SQL Server Management Studio, evidencias visuais e tag anotada publicada no GitHub.
+O projeto esta na versao `v1.3.0`, com auditoria, historico e rastreabilidade implementados e validados no SQL Server Management Studio.
 
 A camada atual possui:
 
@@ -27,7 +23,7 @@ A camada atual possui:
 - indices incrementais da v1.1.0;
 - stored procedures analiticas parametrizadas da v1.2.0.
 
-Ainda nao existem campos de auditoria, historico de alteracoes, historico de status ou vigencia temporal de limites. Esses pontos ja aparecem como limitacoes e evolucoes futuras nos documentos `docs/modelo_dados.md`, `docs/regras_negocio.md` e `docs/dicionario_dados.md`.
+A fase `v1.3.0` adicionou uma tabela unica de auditoria e triggers para as tabelas aprovadas. Historico de status e vigencia temporal de limites continuam fora do escopo atual.
 
 ## 3. Por que auditar dados
 
@@ -96,9 +92,9 @@ Tabelas de cadastro tambem podem afetar interpretacao, mas nao devem entrar auto
 | `Tbl_StatusAmostra` | Define catalogo de status possiveis. | Afeta leitura operacional do status, mas nao altera diretamente conformidade. | `UPDATE`, `DELETE`. | Fora do escopo | O projeto nao possui historico de workflow operacional nesta fase. Pode ser reconsiderada junto com historico de status. |
 | `Tbl_Responsaveis` | Armazena responsaveis tecnicos associados a amostras. | Afeta rastreabilidade de responsabilidade, mas nao altera indicadores analiticos. | `UPDATE`, `DELETE`. | Fora do escopo | Baixa prioridade para a v1.3.0. Auditoria aqui pode gerar escopo sem ganho direto para a camada analitica. |
 
-## 8. Tabelas recomendadas para implementacao inicial
+## 8. Tabelas auditadas na implementacao inicial
 
-As tabelas recomendadas para a primeira implementacao sao:
+As tabelas auditadas na primeira implementacao sao:
 
 1. `Tbl_ResultadosAnalise`
 2. `Tbl_LimitesReferencia`
@@ -151,15 +147,15 @@ Nao se deve planejar auditoria de `SELECT` nesta fase. Triggers DML nao capturam
 | `ValoresNovos` | Guardar snapshot depois da alteracao. | Em `DELETE`, pode ser `NULL`; em `INSERT`, `ValoresAnteriores` pode ser `NULL`. |
 | `Observacao` | Registrar contexto ou limitacao tecnica. | Campo opcional para mensagens da trigger ou comentario futuro. |
 
-## 12. Estrategia tecnica sugerida
+## 12. Estrategia tecnica aplicada
 
-Para a v1.3.0, a estrategia mais adequada e uma tabela unica de auditoria generica, por exemplo:
+Na v1.3.0, foi aplicada uma estrategia de tabela unica de auditoria generica:
 
 ```text
 dbo.Tbl_AuditoriaAlteracoes
 ```
 
-Essa abordagem e recomendada porque:
+Essa abordagem foi adotada porque:
 
 - mantem a fase enxuta;
 - permite auditar mais de uma tabela com estrutura comum;
@@ -169,11 +165,11 @@ Essa abordagem e recomendada porque:
 
 Trade-off: uma tabela unica e menos tipada e menos relacional que tabelas especificas por entidade. Ainda assim, para o escopo didatico e de portfolio, ela oferece bom equilibrio entre clareza, rastreabilidade e manutencao.
 
-Os campos `ValoresAnteriores` e `ValoresNovos` devem ser avaliados em formato JSON textual ou outro formato estruturado suportado pelo SQL Server. O importante e evitar concatenacoes confusas e manter um padrao legivel.
+Os campos `ValoresAnteriores` e `ValoresNovos` foram planejados como snapshots textuais em JSON para manter um padrao legivel e evitar concatenacoes confusas.
 
-## 13. Uso futuro de triggers
+## 13. Uso de triggers
 
-Triggers podem ser usadas futuramente para capturar alteracoes DML nas tabelas auditadas.
+Triggers foram usadas para capturar alteracoes DML nas tabelas auditadas.
 
 Papel esperado das triggers:
 
@@ -183,7 +179,7 @@ Papel esperado das triggers:
 - gravar snapshots antes e depois na tabela de auditoria;
 - manter a operacao original e o registro de auditoria na mesma transacao.
 
-Triggers devem ser criadas apenas para as tabelas aprovadas no escopo da fase. Nao devem recalcular conformidade, alterar regras de negocio ou executar logica analitica.
+As triggers foram restritas as tabelas aprovadas no escopo da fase. Elas nao recalculam conformidade, nao alteram regras de negocio e nao executam logica analitica.
 
 ## 14. Riscos e cuidados com triggers
 
@@ -209,22 +205,32 @@ Cuidados recomendados:
 
 ## 15. Validacao no SSMS
 
-A implementacao futura deve ser validada manualmente no SQL Server Management Studio.
+A migration `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql` foi executada e validada manualmente no SQL Server Management Studio.
 
-Validacoes sugeridas:
+Validacoes realizadas:
 
-- confirmar criacao da tabela de auditoria;
-- confirmar criacao das triggers aprovadas;
-- executar `UPDATE` controlado em registro de teste ou registro didatico reversivel;
-- executar `DELETE` apenas em cenario seguro e planejado, respeitando FKs;
-- avaliar `INSERT` somente se esse evento entrar no escopo final;
-- consultar `dbo.Tbl_AuditoriaAlteracoes`;
-- verificar `NomeTabela`, `IdRegistroAfetado`, `Operacao`, `DataHoraOperacao`, `UsuarioSQL`, `HostName`, `Aplicacao`, `ValoresAnteriores` e `ValoresNovos`;
-- confirmar que os indicadores principais continuam coerentes apos os testes ou que as alteracoes de teste foram revertidas de forma controlada.
+- criacao de `dbo.Tbl_AuditoriaAlteracoes`;
+- criacao das triggers `TRG_Tbl_ResultadosAnalise_Auditoria`, `TRG_Tbl_LimitesReferencia_Auditoria` e `TRG_Tbl_Amostras_Auditoria`;
+- execucao de `UPDATE` controlado em `Tbl_ResultadosAnalise`;
+- execucao de `UPDATE` controlado em `Tbl_LimitesReferencia`;
+- execucao de `UPDATE` controlado em `Tbl_Amostras`;
+- consulta geral de `dbo.Tbl_AuditoriaAlteracoes`;
+- verificacao de `NomeTabela`, `IdRegistroAfetado`, `Operacao`, `DataHoraOperacao`, `UsuarioSQL`, `HostName`, `Aplicacao`, `ValoresAnteriores` e `ValoresNovos`;
+- confirmacao de que os indicadores principais permaneceram coerentes apos a auditoria.
+
+Totais confirmados na auditoria:
+
+| Tabela | Operacao | Total de eventos |
+| --- | --- | ---: |
+| `Tbl_ResultadosAnalise` | `UPDATE` | 2 |
+| `Tbl_LimitesReferencia` | `UPDATE` | 4 |
+| `Tbl_Amostras` | `UPDATE` | 2 |
+
+Total de eventos registrados: 8.
 
 ## 16. Estrategia de evidencias visuais
 
-As evidencias visuais da v1.3.0 devem registrar:
+As evidencias visuais da v1.3.0 registram:
 
 - tabela de auditoria criada;
 - triggers criadas;
@@ -233,9 +239,19 @@ As evidencias visuais da v1.3.0 devem registrar:
 - evento de `UPDATE` auditado em `Tbl_Amostras`;
 - consulta da tabela de auditoria exibindo metadados da operacao;
 - exemplo de valores anteriores e novos;
-- validacao final dos indicadores principais, quando aplicavel.
+- validacao final dos indicadores principais.
 
-Os prints devem seguir a numeracao ja usada em `docs/evidencias/`, iniciando apos as evidencias da v1.2.0.
+Os prints foram salvos em `docs/evidencias/`, seguindo a numeracao ja usada nas fases anteriores.
+
+| Arquivo | Evidencia |
+| --- | --- |
+| `docs/evidencias/20_tabela_auditoria_criada.png` | Tabela `dbo.Tbl_AuditoriaAlteracoes` criada. |
+| `docs/evidencias/21_triggers_auditoria_criadas.png` | Triggers de auditoria criadas e ativas. |
+| `docs/evidencias/22_update_auditado_resultados_analise.png` | `UPDATE` auditado em `Tbl_ResultadosAnalise`. |
+| `docs/evidencias/23_update_auditado_limites_referencia.png` | `UPDATE` auditado em `Tbl_LimitesReferencia`. |
+| `docs/evidencias/24_update_auditado_amostras.png` | `UPDATE` auditado em `Tbl_Amostras`. |
+| `docs/evidencias/25_consulta_geral_auditoria.png` | Consulta geral da tabela de auditoria. |
+| `docs/evidencias/26_validacao_indicadores_pos_auditoria.png` | Indicadores finais preservados apos a auditoria. |
 
 ## 17. Limitacoes atuais
 
@@ -251,32 +267,30 @@ Limitacoes relevantes:
 - auditoria planejada nao cobre leitura de dados (`SELECT`);
 - auditoria nao substitui backup, restore ou controle de acesso.
 
-## 18. Entregas previstas para v1.3.0
+## 18. Entregas realizadas na v1.3.0
 
-Entregas previstas:
+Entregas realizadas:
 
 - documento de planejamento `docs/auditoria_historico.md`;
-- script futuro `sql/migrations/YYYY-MM-DD_v1.3.0_auditoria_historico.sql`;
-- criacao de uma tabela unica de auditoria, se mantida a estrategia recomendada;
-- triggers somente para tabelas aprovadas;
+- script `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql`;
+- criacao da tabela `dbo.Tbl_AuditoriaAlteracoes`;
+- criacao das triggers para `Tbl_ResultadosAnalise`, `Tbl_LimitesReferencia` e `Tbl_Amostras`;
 - validacoes controladas no SSMS;
 - evidencias visuais em `docs/evidencias/`;
-- atualizacao futura de `README.md`, `CHANGELOG.md` e documentos relacionados apos implementacao e validacao.
-
-Nesta etapa, somente o documento de planejamento e criado.
+- atualizacao de `README.md`, `CHANGELOG.md` e documentos relacionados apos implementacao e validacao.
 
 ## 19. Resumo final
 
-A v1.3.0 deve adicionar rastreabilidade sem auditar o banco inteiro.
+A v1.3.0 adicionou rastreabilidade sem auditar o banco inteiro.
 
-O escopo inicial recomendado e auditar:
+O escopo inicial auditado foi:
 
 - `Tbl_ResultadosAnalise`;
 - `Tbl_LimitesReferencia`;
 - `Tbl_Amostras`.
 
-O foco deve estar em `UPDATE` e `DELETE`, avaliando `INSERT` com cautela para evitar ruido durante cargas didaticas.
+Os testes de validacao inicial usaram `UPDATEs` controlados, preservando os dados didaticos e os indicadores finais.
 
-A estrategia mais adequada para a primeira implementacao e uma tabela unica de auditoria, com metadados da operacao e snapshots de valores anteriores e novos. Triggers podem ser usadas futuramente, desde que sejam simples, documentadas, preparadas para operacoes multi-linha e restritas ao registro de auditoria.
+A estrategia aplicada usa uma tabela unica de auditoria, com metadados da operacao e snapshots de valores anteriores e novos. As triggers ficaram restritas ao registro de auditoria.
 
 Com esse recorte, a fase `v1.3.0` acrescenta valor tecnico real ao projeto: rastreabilidade das alteracoes que podem afetar conformidade, indicadores e interpretacao dos dados, sem criar auditoria artificial em todas as tabelas.
