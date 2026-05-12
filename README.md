@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v1.3.0` - auditoria, histórico e rastreabilidade para alterações relevantes, validação no SQL Server Management Studio e evidências visuais.
+Versão atual: `v1.4.0` - backup, restore em banco separado, validação pós-recuperação no SQL Server Management Studio e evidências visuais.
 
 ## Objetivo do projeto
 
@@ -47,6 +47,7 @@ QualidadeAmbiental_SQLServer/
 |   |-- performance_indices.md
 |   |-- regras_negocio.md
 |   |-- auditoria_historico.md
+|   |-- backup_restore.md
 |   |-- stored_procedures.md
 |   `-- relatorios.md
 |-- scripts/
@@ -55,6 +56,7 @@ QualidadeAmbiental_SQLServer/
 |   |   |-- 2026-05-11_v1.1.0_indices_performance.sql
 |   |   |-- 2026-05-12_v1.2.0_stored_procedures.sql
 |   |   |-- 2026-05-12_v1.3.0_auditoria_historico.sql
+|   |   |-- 2026-05-12_v1.4.0_backup_restore_validacao.sql
 |   |   `-- .gitkeep
 |   |-- 01_create_database.sql
 |   |-- 02_create_tables.sql
@@ -86,6 +88,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/performance_indices.md`: documenta a fase `v1.1.0`, os índices criados, critérios técnicos, trade-offs e orientações de análise de plano de execução.
 - `docs/stored_procedures.md`: documenta a fase `v1.2.0`, os critérios para procedures analíticas parametrizadas, rotinas implementadas, validações e evidências.
 - `docs/auditoria_historico.md`: documenta a fase `v1.3.0`, os critérios de auditoria, tabelas auditadas, triggers, validações e evidências.
+- `docs/backup_restore.md`: documenta a fase `v1.4.0`, estratégia de backup, restore em banco separado, validação pós-recuperação e evidências.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -118,6 +121,9 @@ Os scripts devem ser executados preferencialmente no SQL Server Management Studi
 
 9. `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql`
    - Cria a tabela de auditoria, triggers para tabelas críticas e valida sua existência no catálogo do SQL Server.
+
+10. `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`
+    - Executa backup completo, verifica o arquivo `.bak`, orienta restore seguro em banco separado e valida objetos e indicadores pós-recuperação.
 
 ## Modelo de dados resumido
 
@@ -239,6 +245,19 @@ Objetos criados:
 
 A auditoria registra metadados como tabela, registro afetado, operação, data/hora, usuário SQL, host, aplicação, valores anteriores e valores novos. A validação inicial usou `UPDATEs` controlados e preservou os indicadores finais do projeto.
 
+## Backup e restore
+
+A fase `v1.4.0` adicionou uma rotina operacional de backup, restore em banco separado e validação pós-recuperação.
+
+Objetos e artefatos envolvidos:
+
+- Banco origem: `QualidadeAmbiental`.
+- Banco restaurado para teste: `QualidadeAmbiental_RestoreTeste`.
+- Script operacional: `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`.
+- Caminho local de backup: `C:\SQLBackups\QualidadeAmbiental\`.
+
+O arquivo `.bak` não faz parte do repositório Git/GitHub. Ele é um artefato operacional local. A validação confirmou que o banco restaurado preservou tabelas, views, procedures, índices, auditoria e os indicadores finais `72 / 57 / 15 / 50 / 7`.
+
 ## Principais indicadores ambientais
 
 Os indicadores esperados para o projeto incluem:
@@ -354,6 +373,16 @@ Esta seção registra decisões e avanços entre os arquivos oficiais para facil
 - Armazena snapshots em `ValoresAnteriores` e `ValoresNovos`.
 - Mantém exemplos de validação manual comentados, com foco em `UPDATEs` controlados.
 
+### Migration 2026-05-12_v1.4.0_backup_restore_validacao.sql
+
+- Executa backup completo do banco `QualidadeAmbiental`.
+- Valida o arquivo de backup com `RESTORE VERIFYONLY`.
+- Lista nomes lógicos com `RESTORE FILELISTONLY`.
+- Mantém o bloco `RESTORE DATABASE ... WITH MOVE` comentado por padrão para ajuste manual seguro.
+- Orienta restore em banco separado `QualidadeAmbiental_RestoreTeste`.
+- Valida tabelas, views, procedures, índices, auditoria e indicadores no banco restaurado.
+- Não possui `DROP DATABASE`, `ALTER DATABASE ... SET SINGLE_USER`, `WITH REPLACE` ou `RESTORE DATABASE` ativos por padrão.
+
 ## Como validar o banco
 
 Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados. No estado atual do projeto, os scripts oficiais foram executados no SQL Server Management Studio e o checklist final retornou `OK` para os principais indicadores.
@@ -399,6 +428,16 @@ Validações da fase `v1.3.0`:
 - Foram registrados 8 eventos de auditoria do tipo `UPDATE`: 2 em `Tbl_ResultadosAnalise`, 4 em `Tbl_LimitesReferencia` e 2 em `Tbl_Amostras`.
 - Os indicadores finais permaneceram consistentes após a auditoria: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
 
+Validações da fase `v1.4.0`:
+
+- Backup completo do banco `QualidadeAmbiental` executado com sucesso.
+- Arquivo `.bak` verificado com `RESTORE VERIFYONLY`.
+- Arquivos lógicos conferidos com `RESTORE FILELISTONLY`.
+- Restore realizado em banco separado `QualidadeAmbiental_RestoreTeste`.
+- Banco restaurado ficou online no SQL Server.
+- Foram confirmados no banco restaurado: 8 tabelas principais, 6 views oficiais, 3 procedures, 3 triggers de auditoria ativas, 2 índices incrementais ativos e a tabela de auditoria.
+- Os indicadores finais permaneceram consistentes após o restore: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+
 ## Como continuar o projeto
 
 Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente:
@@ -416,8 +455,9 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 11. Executar as migrations incrementais em `sql/migrations/`, quando aplicável.
 12. Consultar `docs/stored_procedures.md` para entender a fase `v1.2.0`.
 13. Consultar `docs/auditoria_historico.md` para entender a fase `v1.3.0`.
-14. Registrar qualquer correção incremental em `sql/migrations/`.
-15. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+14. Consultar `docs/backup_restore.md` para entender a fase `v1.4.0`.
+15. Registrar qualquer correção incremental em `sql/migrations/`.
+16. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
@@ -431,7 +471,7 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | `v1.1.0` | Índices e performance | Índices incrementais para consultas analíticas, critérios técnicos, trade-offs e análise de plano de execução. |
 | `v1.2.0` | Stored procedures | Criar procedures analíticas parametrizadas, validadas no SSMS e alinhadas às views oficiais. |
 | `v1.3.0` | Auditoria e histórico | Adicionar auditoria e rastreabilidade para alterações em resultados, limites e amostras. |
-| `v1.4.0` | Backup e restore | Documentar e implementar scripts operacionais de backup, restore e validação pós-recuperação. |
+| `v1.4.0` | Backup e restore | Implementar backup completo, restore em banco separado e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação | Criar fluxo de carga com staging, validação, tratamento de inconsistências e carga final. |
 | `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
 
@@ -452,6 +492,7 @@ Estado atual do versionamento:
 - A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
 - A tag anotada `v1.2.0` já foi criada e publicada no GitHub, apontando para a versão de stored procedures analíticas parametrizadas, validações no SQL Server Management Studio e evidências visuais registradas.
 - A tag anotada `v1.3.0` já foi criada e publicada no GitHub, apontando para a versão de auditoria, histórico, rastreabilidade, validações no SQL Server Management Studio e evidências visuais registradas.
+- A versão `v1.4.0` foi implementada e validada localmente, com backup, restore em banco separado, validação pós-recuperação e evidências visuais registradas.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
@@ -474,7 +515,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.3.0` implementada e validada tecnicamente no SQL Server Management Studio, com auditoria, histórico, rastreabilidade, documentação técnica e evidências visuais.
+Status: `v1.4.0` implementada e validada tecnicamente no SQL Server Management Studio, com backup, restore em banco separado, validação pós-recuperação, documentação técnica e evidências visuais.
 
 Já foi concluído:
 
@@ -518,6 +559,16 @@ Já foi concluído:
 - validação de eventos auditados com `UPDATEs` controlados;
 - confirmação de que os indicadores finais permaneceram consistentes após a auditoria;
 - evidências visuais da fase `v1.3.0` registradas em `docs/evidencias/`.
+- documentação da fase `v1.4.0` em `docs/backup_restore.md`;
+- script operacional de backup e restore em `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`;
+- criação das pastas locais `C:\SQLBackups\QualidadeAmbiental\` e `C:\SQLBackups\QualidadeAmbiental\RestoreTeste\`;
+- execução de backup completo do banco `QualidadeAmbiental`;
+- validação do arquivo `.bak` com `RESTORE VERIFYONLY`;
+- inspeção dos nomes lógicos com `RESTORE FILELISTONLY`;
+- restore em banco separado `QualidadeAmbiental_RestoreTeste`;
+- validação de objetos restaurados: tabelas, views, procedures, índices, auditoria e triggers;
+- confirmação de que os indicadores finais permaneceram consistentes após o restore;
+- evidências visuais da fase `v1.4.0` registradas em `docs/evidencias/`.
 
 ## Pendências identificadas
 

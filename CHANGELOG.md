@@ -135,10 +135,43 @@ Fase dedicada a auditoria, histórico e rastreabilidade de alterações em tabel
 - A validação inicial utilizou apenas `UPDATEs` controlados; testes de `DELETE` foram evitados para não comprometer os dados didáticos e os indicadores finais.
 - As triggers registram rastreabilidade das alterações, mas não recalculam regras de negócio nem substituem as views oficiais.
 
+## [v1.4.0] - 2026-05-12 - Backup, restore e validação pós-recuperação
+
+Fase dedicada a backup completo, restore em banco separado e validação pós-recuperação, com foco em prática operacional segura de DBA.
+
+### Adicionado
+
+- Documento `docs/backup_restore.md` com planejamento, critérios técnicos, riscos, limitações e estratégia de evidências.
+- Script operacional `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`.
+- Rotina de backup completo do banco `QualidadeAmbiental`.
+- Validação do arquivo `.bak` com `RESTORE VERIFYONLY`.
+- Inspeção dos nomes lógicos com `RESTORE FILELISTONLY`.
+- Orientação de restore em banco separado `QualidadeAmbiental_RestoreTeste`.
+- Validações pós-restore para tabelas, views, procedures, índices, auditoria, triggers e indicadores.
+- Evidências visuais da fase `v1.4.0` em `docs/evidencias/`, cobrindo prints `27` a `37`.
+
+### Validado
+
+- Backup completo executado com sucesso.
+- Arquivo `.bak` criado em pasta local fora do repositório Git.
+- `RESTORE VERIFYONLY` executado com sucesso.
+- `RESTORE FILELISTONLY` usado para identificar nomes lógicos.
+- Restore realizado em banco separado `QualidadeAmbiental_RestoreTeste`.
+- Banco restaurado confirmado como `ONLINE`.
+- Foram confirmados no banco restaurado: 8 tabelas principais, 6 views oficiais, 3 procedures, 3 triggers de auditoria ativas, 2 índices incrementais ativos e a tabela de auditoria.
+- Indicadores finais permaneceram consistentes após o restore: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+
+### Observações
+
+- O restore não foi feito sobre o banco principal `QualidadeAmbiental`.
+- O arquivo `.bak` não foi versionado no GitHub.
+- O script não possui `DROP DATABASE`, `ALTER DATABASE ... SET SINGLE_USER`, `WITH REPLACE` ou `RESTORE DATABASE` ativos por padrão.
+- O bloco de restore permanece orientado para ajuste manual de `LogicalName`, MDF e LDF conforme ambiente local.
+- A fase não implementa alta disponibilidade, SQL Server Agent, log shipping, Always On ou estratégia corporativa formal de RPO/RTO.
+
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v1.4.0` | Backup, restore e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação com staging e validação. |
 | `v2.1.0` | Power BI e camada visual executiva. |

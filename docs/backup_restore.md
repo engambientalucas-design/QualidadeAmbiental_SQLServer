@@ -2,11 +2,15 @@
 
 ## 1. Objetivo da fase v1.4.0
 
-A fase `v1.4.0` tem como objetivo planejar tecnicamente uma rotina segura de backup, restore e validacao pos-recuperacao para o projeto `QualidadeAmbiental_SQLServer`.
+A fase `v1.4.0` tem como objetivo planejar, implementar e validar uma rotina segura de backup, restore e validacao pos-recuperacao para o projeto `QualidadeAmbiental_SQLServer`.
 
-Esta etapa e apenas de planejamento. Nao cria scripts SQL, nao executa comandos no banco e nao altera a estrutura atual.
+O planejamento orientou a criacao e execucao controlada do script operacional:
 
-O documento deve orientar a criacao futura de um script operacional para:
+```text
+sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql
+```
+
+O documento registra a estrategia aplicada para:
 
 - gerar backup do banco principal `QualidadeAmbiental`;
 - restaurar esse backup em um banco separado de teste;
@@ -15,7 +19,7 @@ O documento deve orientar a criacao futura de um script operacional para:
 
 ## 2. Situacao atual do projeto
 
-O projeto esta na versao `v1.3.0`, publicada com auditoria, historico, rastreabilidade, triggers, validacoes no SQL Server Management Studio, evidencias visuais e tag anotada no GitHub.
+O projeto esta na versao `v1.4.0`, com backup completo, verificacao do backup, restore em banco separado e validacao pos-recuperacao realizados no SQL Server Management Studio.
 
 A camada atual possui:
 
@@ -65,7 +69,7 @@ Backup, auditoria e Git se complementam. O projeto precisa manter essa separacao
 
 ## 5. Estrategia recomendada para a fase
 
-A estrategia recomendada para a v1.4.0 e:
+A estrategia aplicada na v1.4.0 foi:
 
 1. Fazer backup completo do banco principal `QualidadeAmbiental`.
 2. Salvar o arquivo `.bak` em pasta local fora do repositorio Git.
@@ -142,7 +146,7 @@ A validacao pos-restore deve ser separada em tres niveis.
 | Validacao logica | Confirmar que regras e relacionamentos continuam coerentes. | FKs, checks, resultados sem limite preservados, auditoria existente. |
 | Validacao de indicadores | Confirmar que os principais numeros batem com a base oficial. | 72 / 57 / 15 / 50 / 7. |
 
-A validacao deve ocorrer no banco restaurado `QualidadeAmbiental_RestoreTeste`.
+A validacao ocorreu no banco restaurado `QualidadeAmbiental_RestoreTeste`.
 
 ## 11. Objetos que devem ser validados
 
@@ -161,9 +165,9 @@ Validar apenas a existencia do banco restaurado nao e suficiente. A fase deve de
 
 ## 12. Indicadores que devem ser conferidos
 
-Os indicadores devem ser conferidos no banco restaurado e comparados com a base oficial:
+Os indicadores foram conferidos no banco restaurado e comparados com a base oficial:
 
-| Indicador | Valor esperado |
+| Indicador | Valor confirmado |
 | --- | ---: |
 | Total de amostras | 6 |
 | Total de resultados analiticos | 72 |
@@ -172,33 +176,36 @@ Os indicadores devem ser conferidos no banco restaurado e comparados com a base 
 | Conformes com limite | 50 |
 | Nao conformes com limite | 7 |
 
-Tambem devem ser conferidos:
+Tambem foram conferidos:
 
-- total de 47 limites de referencia;
-- total de 12 parametros;
-- total de 8 eventos de auditoria registrados na v1.3.0, se o backup for gerado apos a validacao da auditoria;
-- existencia das 3 triggers de auditoria ativas.
+- total de 8 tabelas principais;
+- total de 6 views oficiais;
+- total de 3 procedures da v1.2.0;
+- total de 3 triggers de auditoria ativas;
+- total de 2 indices incrementais ativos;
+- existencia da tabela `dbo.Tbl_AuditoriaAlteracoes`.
 
-Se o backup for gerado em outro momento, o total de eventos de auditoria pode variar. O documento de evidencias deve registrar o momento exato usado para gerar o `.bak`.
+O backup usado na validacao foi gerado apos a v1.3.0, mantendo os objetos de auditoria e os indicadores finais preservados.
 
 ## 13. Evidencias visuais esperadas
 
-Evidencias futuras recomendadas para a v1.4.0:
+As evidencias visuais registradas para a v1.4.0 foram:
 
-| Evidencia | O que deve demonstrar |
+| Arquivo | O que demonstra |
 | --- | --- |
-| Backup executado com sucesso | Mensagem de sucesso no SSMS ou resultado do comando operacional futuro. |
-| Arquivo `.bak` criado | Arquivo visivel na pasta local de backup, fora do repositorio Git. |
-| Restore concluido | Banco `QualidadeAmbiental_RestoreTeste` criado a partir do backup. |
-| Banco restaurado visivel no SSMS | Object Explorer exibindo o banco de teste. |
-| Tabelas principais restauradas | Consulta ao catalogo confirmando as tabelas esperadas. |
-| Views oficiais restauradas | Consulta ao catalogo confirmando as views da camada analitica. |
-| Procedures restauradas | Consulta a `sys.procedures` confirmando as procedures da v1.2.0. |
-| Indices restaurados | Consulta a `sys.indexes` confirmando indices da v1.1.0. |
-| Auditoria restaurada | Tabela `Tbl_AuditoriaAlteracoes` e triggers da v1.3.0 existentes. |
-| Indicadores conferidos | Totais 72 / 57 / 15 / 50 / 7 no banco restaurado. |
+| `docs/evidencias/27_backup_executado_sucesso.png` | Backup completo executado com sucesso. |
+| `docs/evidencias/28_restore_verifyonly_sucesso.png` | `RESTORE VERIFYONLY` executado com sucesso. |
+| `docs/evidencias/29_restore_filelistonly_logical_names.png` | `RESTORE FILELISTONLY` exibindo os nomes logicos. |
+| `docs/evidencias/30_restore_executado_sucesso.png` | Restore executado em banco separado. |
+| `docs/evidencias/31_banco_restore_teste_visivel.png` | Banco `QualidadeAmbiental_RestoreTeste` visivel no SSMS. |
+| `docs/evidencias/32_validacao_tabelas_restore.png` | Tabelas principais restauradas. |
+| `docs/evidencias/33_validacao_views_restore.png` | Views oficiais restauradas. |
+| `docs/evidencias/34_validacao_procedures_restore.png` | Procedures da v1.2.0 restauradas. |
+| `docs/evidencias/35_validacao_auditoria_restore.png` | Tabela e triggers de auditoria restauradas. |
+| `docs/evidencias/36_validacao_indices_restore.png` | Indices da v1.1.0 restaurados. |
+| `docs/evidencias/37_validacao_indicadores_restore.png` | Indicadores finais preservados apos restore. |
 
-Os prints devem ser salvos em `docs/evidencias/`, seguindo a numeracao posterior as evidencias da v1.3.0.
+Os prints foram salvos em `docs/evidencias/`, seguindo a numeracao posterior as evidencias da v1.3.0.
 
 ## 14. Limitacoes do ambiente local
 
@@ -215,19 +222,19 @@ Limitacoes esperadas em ambiente local SQL Server Express/SSMS:
 
 Essas limitacoes nao invalidam a fase. Elas ajudam a manter o escopo didatico, honesto e tecnicamente correto.
 
-## 15. Entregas previstas para v1.4.0
+## 15. Entregas realizadas na v1.4.0
 
-Entregas previstas:
+Entregas realizadas:
 
 - documento de planejamento `docs/backup_restore.md`;
-- script operacional futuro para backup e restore;
+- script operacional `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`;
 - backup completo do banco `QualidadeAmbiental`;
 - restore em banco separado `QualidadeAmbiental_RestoreTeste`;
 - validacoes estruturais no banco restaurado;
 - validacoes logicas no banco restaurado;
 - validacoes dos indicadores finais;
 - evidencias visuais no SSMS;
-- atualizacao futura de `README.md`, `CHANGELOG.md` e `docs/evidencias_validacao.md` apos implementacao e validacao.
+- atualizacao de `README.md`, `CHANGELOG.md` e `docs/evidencias_validacao.md` apos implementacao e validacao.
 
 O script operacional futuro deve ser tratado como rotina de DBA, nao como migration de alteracao de schema.
 
@@ -253,16 +260,16 @@ Esses temas podem ser mencionados como evolucoes futuras, mas nao devem ser apre
 
 ## 17. Resumo final
 
-A v1.4.0 deve demonstrar maturidade operacional de DBA sem aumentar risco sobre o banco principal.
+A v1.4.0 demonstrou maturidade operacional de DBA sem aumentar risco sobre o banco principal.
 
-A decisao central e fazer backup de `QualidadeAmbiental` e restaurar em `QualidadeAmbiental_RestoreTeste`, mantendo o banco principal intacto.
+A decisao central foi fazer backup de `QualidadeAmbiental` e restaurar em `QualidadeAmbiental_RestoreTeste`, mantendo o banco principal intacto.
 
-O arquivo `.bak` deve ficar fora do GitHub, em pasta local acessivel ao servico SQL Server. O script futuro deve considerar permissoes de pasta e possivel uso de `WITH MOVE` para os arquivos fisicos do banco restaurado.
+O arquivo `.bak` ficou fora do GitHub, em pasta local acessivel ao servico SQL Server. O restore usou banco separado e caminhos fisicos proprios para os arquivos do banco restaurado.
 
-A validacao pos-restore deve comprovar tres coisas:
+A validacao pos-restore comprovou tres coisas:
 
 - os objetos foram restaurados;
 - as regras e estruturas continuam coerentes;
 - os indicadores oficiais permanecem iguais aos valores esperados.
 
-Com esse recorte, a fase `v1.4.0` reforca uma pratica essencial de engenharia de dados e DBA: backup so tem valor tecnico quando o restore tambem e validado.
+Com esse recorte, a fase `v1.4.0` reforcou uma pratica essencial de engenharia de dados e DBA: backup so tem valor tecnico quando o restore tambem e validado.

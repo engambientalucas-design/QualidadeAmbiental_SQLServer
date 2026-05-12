@@ -34,6 +34,7 @@ Os scripts oficiais foram executados na seguinte ordem:
 | 7 | `sql/migrations/2026-05-11_v1.1.0_indices_performance.sql` | Criacao e validacao de indices incrementais. |
 | 8 | `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` | Criacao e validacao de stored procedures analiticas parametrizadas. |
 | 9 | `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql` | Criacao e validacao de auditoria, historico e rastreabilidade. |
+| 10 | `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql` | Backup completo, verificacao do backup, restore em banco separado e validacao pos-recuperacao. |
 
 ## Checklist final confirmado
 
@@ -124,6 +125,57 @@ Totais confirmados na auditoria:
 | `Tbl_Amostras` | `UPDATE` | 2 |
 
 Total de eventos registrados: 8.
+
+## Evidencias da v1.4.0 - Backup, restore e validacao pos-recuperacao
+
+A fase `v1.4.0` adicionou evidencias visuais para validar backup completo, verificacao do arquivo `.bak`, inspecao dos arquivos logicos, restore em banco separado e validacao pos-recuperacao.
+
+O backup foi gerado fora do repositorio Git, em caminho local:
+
+```text
+C:\SQLBackups\QualidadeAmbiental\
+```
+
+O banco restaurado usado para validacao foi:
+
+```text
+QualidadeAmbiental_RestoreTeste
+```
+
+| Arquivo | Consulta, script ou recurso relacionado | O que demonstra | Status |
+| --- | --- | --- | --- |
+| `docs/evidencias/27_backup_executado_sucesso.png` | `BACKUP DATABASE` | Confirma execucao do backup completo do banco `QualidadeAmbiental`. | Registrado |
+| `docs/evidencias/28_restore_verifyonly_sucesso.png` | `RESTORE VERIFYONLY` | Confirma verificacao do arquivo de backup. | Registrado |
+| `docs/evidencias/29_restore_filelistonly_logical_names.png` | `RESTORE FILELISTONLY` | Exibe os nomes logicos dos arquivos do backup. | Registrado |
+| `docs/evidencias/30_restore_executado_sucesso.png` | `RESTORE DATABASE` manual com `WITH MOVE` | Confirma restore em `QualidadeAmbiental_RestoreTeste`. | Registrado |
+| `docs/evidencias/31_banco_restore_teste_visivel.png` | Object Explorer do SSMS | Confirma o banco restaurado visivel no SSMS. | Registrado |
+| `docs/evidencias/32_validacao_tabelas_restore.png` | Catalogo do SQL Server | Confirma as tabelas principais restauradas. | Registrado |
+| `docs/evidencias/33_validacao_views_restore.png` | Catalogo do SQL Server | Confirma as views oficiais restauradas. | Registrado |
+| `docs/evidencias/34_validacao_procedures_restore.png` | `sys.procedures` | Confirma as procedures da v1.2.0 restauradas. | Registrado |
+| `docs/evidencias/35_validacao_auditoria_restore.png` | `sys.tables` e `sys.triggers` | Confirma tabela e triggers de auditoria restauradas. | Registrado |
+| `docs/evidencias/36_validacao_indices_restore.png` | `sys.indexes` | Confirma indices da v1.1.0 restaurados. | Registrado |
+| `docs/evidencias/37_validacao_indicadores_restore.png` | `VW_ConformidadeResultados` no banco restaurado | Confirma indicadores finais preservados apos restore. | Registrado |
+
+Validacoes confirmadas no banco restaurado:
+
+| Validacao | Valor confirmado |
+| --- | ---: |
+| Tabelas principais | 8 |
+| Views oficiais | 6 |
+| Procedures | 3 |
+| Triggers de auditoria ativas | 3 |
+| Indices incrementais ativos | 2 |
+| Tabela de auditoria | 1 |
+
+Indicadores confirmados no banco restaurado:
+
+| Indicador | Valor confirmado |
+| --- | ---: |
+| Total de resultados analiticos | 72 |
+| Resultados com limite | 57 |
+| Resultados sem limite | 15 |
+| Conformes com limite | 50 |
+| Nao conformes com limite | 7 |
 
 ## Como capturar os prints no SSMS
 
