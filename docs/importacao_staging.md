@@ -2,19 +2,60 @@
 
 ## 1. Objetivo da fase v2.0.0
 
-A fase `v2.0.0` tem como objetivo planejar tecnicamente um fluxo controlado de importacao de resultados analiticos externos usando staging, validacao, classificacao de registros e carga final controlada.
+A fase `v2.0.0` teve como objetivo implementar e validar tecnicamente um fluxo controlado de importacao de resultados analiticos externos usando staging, validacao, classificacao de registros e carga final controlada.
 
-Esta etapa e apenas de planejamento. Nao cria scripts SQL, nao executa comandos no banco e nao altera dados oficiais.
-
-O documento deve orientar a criacao futura do script:
+O planejamento desta fase foi materializado no script:
 
 ```text
 sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql
 ```
 
+A validacao inicial foi executada no banco restaurado/teste:
+
+```text
+QualidadeAmbiental_RestoreTeste
+```
+
+O banco principal `QualidadeAmbiental` nao foi alterado durante a validacao da v2.0.0.
+
+## 1.1. Resultado da implementacao e validacao
+
+```text
+Status da fase: implementada e validada localmente no SSMS.
+```
+
+Objetos criados pela fase:
+
+- `dbo.Tbl_LotesImportacao`;
+- `dbo.Stg_ResultadosAnaliseImportacao`;
+- FK de `dbo.Stg_ResultadosAnaliseImportacao.IdLoteImportacao` para `dbo.Tbl_LotesImportacao.IdLoteImportacao`;
+- checks de status e integridade basica;
+- indice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status`;
+- procedure `dbo.usp_ValidarStgResultadosAnalise`;
+- procedure `dbo.usp_CarregarResultadosAnaliseValidados`.
+
+Validacoes executadas no banco `QualidadeAmbiental_RestoreTeste`:
+
+- tabelas de lote e staging criadas;
+- procedures de validacao e carga controlada criadas;
+- indice minimo da staging criado e habilitado;
+- constraints, checks e FK criadas e habilitadas;
+- lote didatico criado com `IdLoteImportacao = 1`;
+- 7 linhas recebidas na staging com status inicial `PENDENTE`;
+- 7 linhas classificadas como `INVALIDO` pela procedure de validacao;
+- lote atualizado para `VALIDADO`;
+- totais do lote confirmados: `TotalLinhas = 7`, `TotalValidas = 0`, `TotalInvalidas = 7`, `TotalCarregadas = 0`;
+- carga sem confirmacao bloqueada pela procedure de carga;
+- carga com `@ConfirmarCarga = 1` bloqueada por haver registros `INVALIDO`;
+- nenhum registro invalido carregado em `dbo.Tbl_ResultadosAnalise`;
+- `dbo.Tbl_ResultadosAnalise` permaneceu com 72 registros;
+- indicadores finais preservados: 72 resultados analiticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 nao conformes.
+
+Nao houve carga final de registros validos nesta rodada. Esse resultado e esperado e aceitavel, porque a base didatica atual ja possui as combinacoes reais de 6 amostras x 12 parametros em `dbo.Tbl_ResultadosAnalise`. A validacao demonstrou principalmente a seguranca do pipeline: retencao na staging, identificacao de invalidos, bloqueio de carga indevida e preservacao da tabela oficial.
+
 ## 2. Situacao atual do projeto
 
-O projeto `QualidadeAmbiental_SQLServer` esta na versao `v1.4.0`, com banco relacional, dados didaticos, views, consultas, indices, stored procedures, auditoria, backup, restore em banco separado e evidencias visuais publicadas.
+O projeto `QualidadeAmbiental_SQLServer` esta na versao `v2.0.0`, com banco relacional, dados didaticos, views, consultas, indices, stored procedures, auditoria, backup, restore em banco separado, pipeline de importacao com staging e evidencias visuais registradas.
 
 A base oficial possui indicadores consolidados:
 
@@ -26,7 +67,7 @@ A base oficial possui indicadores consolidados:
 | Conformes com limite | 50 |
 | Nao conformes com limite | 7 |
 
-A fase v2.0.0 deve preservar esses resultados no banco principal, salvo decisao explicita posterior de executar uma carga final controlada.
+A fase v2.0.0 preservou esses resultados no banco principal. A validacao foi realizada em `QualidadeAmbiental_RestoreTeste`.
 
 ## 3. Problema real de importacao que sera resolvido
 
@@ -180,7 +221,7 @@ Essa etapa protege a constraint `UQ_Tbl_ResultadosAnalise_AmostraParametro`.
 
 `dbo.Tbl_ResultadosAnalise` nao usa `IDENTITY`. O projeto utiliza IDs explicitos para manter dados didaticos previsiveis.
 
-Para o escopo da v2.0.0, a carga final pode planejar:
+Para o escopo da v2.0.0, a carga final implementa a geracao de chave por:
 
 ```text
 MAX(IdResultado) + ROW_NUMBER()
@@ -229,7 +270,7 @@ Isso e desejavel como rastreabilidade, mas deve ser documentado nas evidencias. 
 
 A v1.4.0 criou um caminho seguro para validar alteracoes em banco restaurado.
 
-A primeira validacao da v2.0.0 deve ocorrer preferencialmente em:
+A primeira validacao da v2.0.0 ocorreu em:
 
 ```text
 QualidadeAmbiental_RestoreTeste
@@ -248,7 +289,7 @@ Ambiente recomendado para a primeira implementacao:
 | `QualidadeAmbiental` | Base oficial preservada. |
 | `QualidadeAmbiental_RestoreTeste` | Ambiente seguro para validar staging e carga final controlada. |
 
-A documentacao futura deve registrar claramente em qual banco a v2.0.0 foi validada.
+A documentacao da fase registra claramente que a v2.0.0 foi validada em `QualidadeAmbiental_RestoreTeste`.
 
 ## 18. Validações pos-carga
 
@@ -266,19 +307,22 @@ Se a carga for feita em `QualidadeAmbiental_RestoreTeste`, os indicadores podem 
 
 ## 19. Evidencias visuais esperadas
 
-| Evidencia | O que deve demonstrar | Consulta ou objeto relacionado |
+As evidencias visuais da v2.0.0 foram registradas no SQL Server Management Studio usando o banco `QualidadeAmbiental_RestoreTeste`.
+
+| Evidencia | O que demonstra | Consulta ou objeto relacionado |
 | --- | --- | --- |
-| Tabela de lotes criada | Controle de importacoes disponivel. | `dbo.Tbl_LotesImportacao` |
-| Tabela staging criada | Area de recebimento bruto disponivel. | `dbo.Stg_ResultadosAnaliseImportacao` |
-| Lote registrado | Inicio de importacao rastreavel. | `dbo.Tbl_LotesImportacao` |
-| Dados de exemplo na staging | Linhas recebidas antes da validacao. | `dbo.Stg_ResultadosAnaliseImportacao` |
-| Registros validos | Linhas classificadas como `VALIDO`. | `StatusValidacao` |
-| Registros invalidos | Linhas classificadas como `INVALIDO`. | `StatusValidacao` |
-| Mensagens de erro | Motivos de rejeicao claros. | `MensagemValidacao` |
-| Carga de validos | Linhas `VALIDO` carregadas ou preparadas para carga. | `dbo.usp_CarregarResultadosAnaliseValidados` |
-| Invalidos nao carregados | Garantia de que registros rejeitados nao foram para a tabela final. | `dbo.Tbl_ResultadosAnalise` |
-| Indicadores pos-carga | Efeito da carga no banco de teste. | `dbo.VW_ConformidadeResultados` |
-| Auditoria pos-carga | `INSERTs` registrados se a carga final ocorrer. | `dbo.Tbl_AuditoriaAlteracoes` |
+| `docs/evidencias/38_tabelas_importacao_criadas.png` | Tabelas de lote e staging criadas. | `dbo.Tbl_LotesImportacao`, `dbo.Stg_ResultadosAnaliseImportacao` |
+| `docs/evidencias/39_procedures_importacao_criadas.png` | Procedures de validacao e carga controlada criadas. | `sys.procedures` |
+| `docs/evidencias/40_indice_staging_criado.png` | Indice minimo da staging criado e habilitado. | `sys.indexes` |
+| `docs/evidencias/41_constraints_importacao_criadas.png` | Checks e FK criadas e habilitadas. | `sys.check_constraints`, `sys.foreign_keys` |
+| `docs/evidencias/42_lote_importacao_criado.png` | Lote didatico criado com status inicial `ABERTO`. | `dbo.Tbl_LotesImportacao` |
+| `docs/evidencias/43_dados_brutos_staging_carregados.png` | 7 linhas recebidas na staging como `PENDENTE`. | `dbo.Stg_ResultadosAnaliseImportacao` |
+| `docs/evidencias/44_validacao_lote_staging.png` | Validacao do lote com 7 linhas classificadas como `INVALIDO` e lote `VALIDADO`. | `dbo.usp_ValidarStgResultadosAnalise` |
+| `docs/evidencias/45_registros_invalidos_staging.png` | Registros invalidos e mensagens de validacao. | `StatusValidacao`, `MensagemValidacao` |
+| `docs/evidencias/46_bloqueio_carga_sem_confirmacao.png` | Bloqueio da carga quando `@ConfirmarCarga` nao e 1. | `dbo.usp_CarregarResultadosAnaliseValidados` |
+| `docs/evidencias/47_bloqueio_carga_com_invalidos.png` | Bloqueio da carga com registros `INVALIDO` no lote. | `dbo.usp_CarregarResultadosAnaliseValidados` |
+| `docs/evidencias/48_invalidos_nao_carregados_tabela_final.png` | Confirmacao de que invalidos nao foram carregados e a tabela final permaneceu com 72 registros. | `dbo.Tbl_ResultadosAnalise` |
+| `docs/evidencias/49_indicadores_pos_validacao_staging.png` | Indicadores finais preservados apos validacao da staging. | `dbo.VW_ConformidadeResultados` |
 
 ## 20. Indice minimo recomendado
 
@@ -331,27 +375,27 @@ Fora do escopo:
 
 ## 23. Entregas previstas
 
-Entregas previstas para a v2.0.0:
+Entregas realizadas na v2.0.0:
 
 - documento de planejamento `docs/importacao_staging.md`;
-- script futuro `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql`;
+- script `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql`;
 - tabela de controle de lotes;
 - tabela staging de resultados analiticos;
 - procedure de validacao da staging;
 - procedure de carga controlada de registros validos;
-- indice minimo por lote e status, se confirmado na implementacao;
-- exemplos pequenos e didaticos de linhas validas e invalidas;
+- indice minimo por lote e status;
+- exemplos pequenos e didaticos comentados no script;
 - evidencias visuais no SSMS;
-- atualizacao futura de README, CHANGELOG e evidencias apos validacao.
+- validacao em banco restaurado/teste sem alteracao do banco principal.
 
 ## 24. Resumo final
 
-A v2.0.0 deve marcar a transicao do projeto para uma logica mais proxima de engenharia de dados.
+A v2.0.0 marcou a transicao do projeto para uma logica mais proxima de engenharia de dados.
 
-O foco recomendado e importar resultados analiticos externos para amostras ja existentes, usando uma camada de staging e validacao antes de qualquer carga final.
+O foco implementado foi importar resultados analiticos externos para amostras ja existentes, usando uma camada de staging e validacao antes de qualquer carga final.
 
-O desenho proposto evita inflar o banco com tabelas artificiais. A primeira implementacao deve criar apenas controle de lote, staging, validacao e carga controlada.
+O desenho evitou inflar o banco com tabelas artificiais. A implementacao criou apenas controle de lote, staging, validacao e carga controlada.
 
-Registros invalidos devem permanecer na staging com mensagem clara. Registros validos so devem ser carregados por procedure, com lote informado, confirmacao explicita, transacao e `SET XACT_ABORT ON`.
+Registros invalidos permanecem na staging com mensagem clara. Registros validos so podem ser carregados por procedure, com lote informado, confirmacao explicita, transacao e `SET XACT_ABORT ON`.
 
-Com esse recorte, a fase `v2.0.0` demonstra maturidade tecnica sem comprometer a base oficial validada ate a v1.4.0.
+Com esse recorte, a fase `v2.0.0` demonstrou maturidade tecnica sem comprometer a base oficial validada ate a v1.4.0. A carga final de registros validos fica como evolucao futura, em um cenario de teste que possua combinacoes validas ainda ausentes em `dbo.Tbl_ResultadosAnalise`.

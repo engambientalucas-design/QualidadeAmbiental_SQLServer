@@ -13,6 +13,7 @@ As evidencias visuais complementam os scripts SQL e a documentacao tecnica. Elas
 Ambiente informado para validacao:
 
 - Banco de dados: `QualidadeAmbiental`
+- Banco restaurado/teste usado nas fases de restore e importacao: `QualidadeAmbiental_RestoreTeste`
 - Plataforma: SQL Server
 - Ferramenta de execucao e validacao: SQL Server Management Studio
 - Projeto: `QualidadeAmbiental_SQLServer`
@@ -35,6 +36,7 @@ Os scripts oficiais foram executados na seguinte ordem:
 | 8 | `sql/migrations/2026-05-12_v1.2.0_stored_procedures.sql` | Criacao e validacao de stored procedures analiticas parametrizadas. |
 | 9 | `sql/migrations/2026-05-12_v1.3.0_auditoria_historico.sql` | Criacao e validacao de auditoria, historico e rastreabilidade. |
 | 10 | `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql` | Backup completo, verificacao do backup, restore em banco separado e validacao pos-recuperacao. |
+| 11 | `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql` | Pipeline de importacao com lote, staging, validacao e carga controlada, validado em `QualidadeAmbiental_RestoreTeste`. |
 
 ## Checklist final confirmado
 
@@ -176,6 +178,45 @@ Indicadores confirmados no banco restaurado:
 | Resultados sem limite | 15 |
 | Conformes com limite | 50 |
 | Nao conformes com limite | 7 |
+
+## Evidencias da v2.0.0 - Pipeline de importacao com staging e validacao
+
+A fase `v2.0.0` adicionou evidencias visuais para validar a criacao dos objetos de importacao, o recebimento de dados brutos em staging, a classificacao de registros invalidos, os bloqueios de carga indevida e a preservacao dos indicadores finais.
+
+A validacao foi executada no banco restaurado/teste:
+
+```text
+QualidadeAmbiental_RestoreTeste
+```
+
+O banco principal `QualidadeAmbiental` nao foi alterado durante a validacao da fase.
+
+| Arquivo | Consulta, script ou recurso relacionado | O que demonstra | Status |
+| --- | --- | --- | --- |
+| `docs/evidencias/38_tabelas_importacao_criadas.png` | `sys.tables` apos a migration `v2.0.0` | Confirma a existencia de `dbo.Tbl_LotesImportacao` e `dbo.Stg_ResultadosAnaliseImportacao`. | Registrado |
+| `docs/evidencias/39_procedures_importacao_criadas.png` | `sys.procedures` apos a migration `v2.0.0` | Confirma a existencia de `dbo.usp_ValidarStgResultadosAnalise` e `dbo.usp_CarregarResultadosAnaliseValidados`. | Registrado |
+| `docs/evidencias/40_indice_staging_criado.png` | `sys.indexes` | Confirma o indice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status`, ativo e nao unico. | Registrado |
+| `docs/evidencias/41_constraints_importacao_criadas.png` | `sys.check_constraints` e `sys.foreign_keys` | Confirma checks de status, integridade basica e FK da staging para lotes, todas habilitadas. | Registrado |
+| `docs/evidencias/42_lote_importacao_criado.png` | `dbo.Tbl_LotesImportacao` | Confirma lote didatico criado com `IdLoteImportacao = 1` e status inicial `ABERTO`. | Registrado |
+| `docs/evidencias/43_dados_brutos_staging_carregados.png` | `dbo.Stg_ResultadosAnaliseImportacao` | Confirma 7 linhas recebidas na staging com status inicial `PENDENTE`. | Registrado |
+| `docs/evidencias/44_validacao_lote_staging.png` | `dbo.usp_ValidarStgResultadosAnalise` | Confirma validacao do lote, 7 linhas `INVALIDO`, lote `VALIDADO` e totais `7 / 0 / 7 / 0`. | Registrado |
+| `docs/evidencias/45_registros_invalidos_staging.png` | Consulta da staging por status | Confirma os registros invalidos e suas mensagens de validacao. | Registrado |
+| `docs/evidencias/46_bloqueio_carga_sem_confirmacao.png` | `dbo.usp_CarregarResultadosAnaliseValidados` com `@ConfirmarCarga = 0` | Confirma bloqueio operacional da carga sem confirmacao explicita. | Registrado |
+| `docs/evidencias/47_bloqueio_carga_com_invalidos.png` | `dbo.usp_CarregarResultadosAnaliseValidados` com `@ConfirmarCarga = 1` | Confirma bloqueio da carga quando o lote possui registros `INVALIDO`. | Registrado |
+| `docs/evidencias/48_invalidos_nao_carregados_tabela_final.png` | `dbo.Tbl_ResultadosAnalise` e staging | Confirma que invalidos permaneceram na staging e que `dbo.Tbl_ResultadosAnalise` permaneceu com 72 registros. | Registrado |
+| `docs/evidencias/49_indicadores_pos_validacao_staging.png` | `dbo.VW_ConformidadeResultados` | Confirma preservacao dos indicadores finais: 72 resultados, 57 com limite, 15 sem limite, 50 conformes e 7 nao conformes. | Registrado |
+
+Validacoes confirmadas na v2.0.0:
+
+| Validacao | Valor confirmado |
+| --- | ---: |
+| Linhas recebidas na staging | 7 |
+| Linhas validas | 0 |
+| Linhas invalidas | 7 |
+| Linhas carregadas | 0 |
+| Total em `dbo.Tbl_ResultadosAnalise` apos validacao | 72 |
+
+Nao houve carga final de registros validos nesta rodada. Esse comportamento e esperado, porque a base didatica atual ja possui as combinacoes reais de 6 amostras x 12 parametros em `dbo.Tbl_ResultadosAnalise`. A evidencia da fase demonstra seguranca operacional: dados brutos retidos na staging, inconsistencias identificadas, cargas indevidas bloqueadas e indicadores oficiais preservados.
 
 ## Como capturar os prints no SSMS
 

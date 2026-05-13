@@ -169,9 +169,55 @@ Fase dedicada a backup completo, restore em banco separado e validação pós-re
 - O bloco de restore permanece orientado para ajuste manual de `LogicalName`, MDF e LDF conforme ambiente local.
 - A fase não implementa alta disponibilidade, SQL Server Agent, log shipping, Always On ou estratégia corporativa formal de RPO/RTO.
 
+## [v2.0.0] - 2026-05-13 - Pipeline de importação com staging e validação
+
+Fase dedicada a importação controlada de resultados analíticos externos, com controle de lote, staging, validação, classificação de registros e carga final protegida por confirmação explícita.
+
+### Adicionado
+
+- Documento `docs/importacao_staging.md` atualizado com implementação, validação e evidências da fase `v2.0.0`.
+- Script incremental `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql`.
+- Tabela `dbo.Tbl_LotesImportacao` para controle de lotes de importação.
+- Tabela `dbo.Stg_ResultadosAnaliseImportacao` para receber dados brutos de resultados analíticos externos.
+- FK da staging para `dbo.Tbl_LotesImportacao`.
+- Checks de status e integridade básica para lotes e staging.
+- Índice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status` para apoiar filtros por lote e status.
+- Procedure `dbo.usp_ValidarStgResultadosAnalise` para validar registros da staging por lote.
+- Procedure `dbo.usp_CarregarResultadosAnaliseValidados` para carga final controlada de registros válidos.
+- Bloco opcional comentado no script para testes manuais no SSMS.
+- Evidências visuais da fase `v2.0.0` em `docs/evidencias/`, cobrindo prints `38` a `49`.
+
+### Validado
+
+- Migration `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql` executada e validada no banco `QualidadeAmbiental_RestoreTeste`.
+- Banco principal `QualidadeAmbiental` preservado.
+- Tabelas `dbo.Tbl_LotesImportacao` e `dbo.Stg_ResultadosAnaliseImportacao` confirmadas no catálogo do SQL Server.
+- Procedures `dbo.usp_ValidarStgResultadosAnalise` e `dbo.usp_CarregarResultadosAnaliseValidados` confirmadas em `sys.procedures`.
+- Índice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status` confirmado em `sys.indexes`, ativo e não único.
+- Constraints, checks e FK confirmadas e habilitadas.
+- Lote didático criado com `IdLoteImportacao = 1`.
+- 7 linhas recebidas na staging com status inicial `PENDENTE`.
+- Procedure de validação classificou as 7 linhas como `INVALIDO`.
+- Lote atualizado para `VALIDADO`, com `TotalLinhas = 7`, `TotalValidas = 0`, `TotalInvalidas = 7` e `TotalCarregadas = 0`.
+- Carga sem confirmação bloqueada pela procedure de carga.
+- Carga com `@ConfirmarCarga = 1` bloqueada por haver registros `INVALIDO` no lote.
+- Nenhum registro inválido foi carregado em `dbo.Tbl_ResultadosAnalise`.
+- `dbo.Tbl_ResultadosAnalise` permaneceu com 72 registros.
+- Indicadores finais preservados após a validação da staging: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+- Prints `38` a `49` registrados para comprovar visualmente a validação da fase.
+
+### Observações
+
+- A validação da v2.0.0 ocorreu em `QualidadeAmbiental_RestoreTeste`.
+- O banco principal `QualidadeAmbiental` não foi alterado.
+- Não houve carga final de registros válidos nesta rodada.
+- A ausência de registros válidos carregados é esperada, pois a base didática atual já possui as combinações reais de 6 amostras x 12 parâmetros em `dbo.Tbl_ResultadosAnalise`.
+- A fase demonstrou a segurança do pipeline: retenção de dados brutos na staging, identificação de inválidos, mensagens claras de validação, bloqueio de carga sem confirmação, bloqueio de carga com inválidos e preservação da tabela oficial.
+- A fase não implementa integração real com laboratório externo, automação corporativa, SSIS, API ou rotina externa de importação.
+- A tag `v2.0.0` ainda não foi criada neste registro.
+
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v2.0.0` | Pipeline de importação com staging e validação. |
 | `v2.1.0` | Power BI e camada visual executiva. |

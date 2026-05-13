@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v1.4.0` - backup, restore em banco separado, validação pós-recuperação no SQL Server Management Studio e evidências visuais.
+Versão atual: `v2.0.0` - pipeline de importação com staging, validação, bloqueio de cargas indevidas e evidências visuais no SQL Server Management Studio.
 
 ## Objetivo do projeto
 
@@ -57,6 +57,7 @@ QualidadeAmbiental_SQLServer/
 |   |   |-- 2026-05-12_v1.2.0_stored_procedures.sql
 |   |   |-- 2026-05-12_v1.3.0_auditoria_historico.sql
 |   |   |-- 2026-05-12_v1.4.0_backup_restore_validacao.sql
+|   |   |-- 2026-05-13_v2.0.0_importacao_staging.sql
 |   |   `-- .gitkeep
 |   |-- 01_create_database.sql
 |   |-- 02_create_tables.sql
@@ -89,6 +90,7 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/stored_procedures.md`: documenta a fase `v1.2.0`, os critérios para procedures analíticas parametrizadas, rotinas implementadas, validações e evidências.
 - `docs/auditoria_historico.md`: documenta a fase `v1.3.0`, os critérios de auditoria, tabelas auditadas, triggers, validações e evidências.
 - `docs/backup_restore.md`: documenta a fase `v1.4.0`, estratégia de backup, restore em banco separado, validação pós-recuperação e evidências.
+- `docs/importacao_staging.md`: documenta a fase `v2.0.0`, pipeline de importação com staging, validação, classificação de registros e carga final controlada.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -124,6 +126,9 @@ Os scripts devem ser executados preferencialmente no SQL Server Management Studi
 
 10. `sql/migrations/2026-05-12_v1.4.0_backup_restore_validacao.sql`
     - Executa backup completo, verifica o arquivo `.bak`, orienta restore seguro em banco separado e valida objetos e indicadores pós-recuperação.
+
+11. `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql`
+    - Cria pipeline de importação com lote, staging, validação e carga controlada. A primeira validação deve ocorrer preferencialmente no banco restaurado/teste `QualidadeAmbiental_RestoreTeste`, preservando o banco principal `QualidadeAmbiental`.
 
 ## Modelo de dados resumido
 
@@ -258,6 +263,24 @@ Objetos e artefatos envolvidos:
 
 O arquivo `.bak` não faz parte do repositório Git/GitHub. Ele é um artefato operacional local. A validação confirmou que o banco restaurado preservou tabelas, views, procedures, índices, auditoria e os indicadores finais `72 / 57 / 15 / 50 / 7`.
 
+## Importação com staging
+
+A fase `v2.0.0` adicionou um pipeline enxuto de importação de resultados analíticos externos para amostras já existentes, usando controle de lote, tabela staging, validação por procedure, classificação de registros e carga final controlada.
+
+Objetos criados:
+
+- `dbo.Tbl_LotesImportacao`: controla lotes, origem, status, totais e período de processamento.
+- `dbo.Stg_ResultadosAnaliseImportacao`: recebe dados brutos de resultados analíticos e registra status/mensagens de validação.
+- `IX_Stg_ResultadosAnaliseImportacao_Lote_Status`: índice mínimo para filtros por lote e status.
+- `dbo.usp_ValidarStgResultadosAnalise`: valida registros de staging por lote.
+- `dbo.usp_CarregarResultadosAnaliseValidados`: carrega apenas registros válidos mediante confirmação explícita.
+
+A validação inicial foi feita em `QualidadeAmbiental_RestoreTeste`. O banco principal `QualidadeAmbiental` foi preservado.
+
+Na validação didática, 7 linhas foram recebidas na staging e classificadas como `INVALIDO`. A carga sem confirmação foi bloqueada, a carga com registros inválidos também foi bloqueada e nenhum registro inválido foi carregado em `dbo.Tbl_ResultadosAnalise`.
+
+Não houve carga final de registros válidos nesta rodada, pois a base didática atual já possui as combinações reais de 6 amostras x 12 parâmetros em `dbo.Tbl_ResultadosAnalise`. A fase comprovou a segurança do pipeline e manteve os indicadores finais em `72 / 57 / 15 / 50 / 7`.
+
 ## Principais indicadores ambientais
 
 Os indicadores esperados para o projeto incluem:
@@ -383,6 +406,19 @@ Esta seção registra decisões e avanços entre os arquivos oficiais para facil
 - Valida tabelas, views, procedures, índices, auditoria e indicadores no banco restaurado.
 - Não possui `DROP DATABASE`, `ALTER DATABASE ... SET SINGLE_USER`, `WITH REPLACE` ou `RESTORE DATABASE` ativos por padrão.
 
+### Migration 2026-05-13_v2.0.0_importacao_staging.sql
+
+- Cria `dbo.Tbl_LotesImportacao`.
+- Cria `dbo.Stg_ResultadosAnaliseImportacao`.
+- Cria FK da staging para lotes, checks de status e integridade básica.
+- Cria o índice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status`.
+- Cria `dbo.usp_ValidarStgResultadosAnalise`.
+- Cria `dbo.usp_CarregarResultadosAnaliseValidados`.
+- Exige `@ConfirmarCarga = 1` para carga final controlada.
+- Usa transação explícita e `SET XACT_ABORT ON` na procedure de carga.
+- Mantém exemplos didáticos comentados para execução manual no SSMS.
+- Foi validada em `QualidadeAmbiental_RestoreTeste`, sem alterar o banco principal.
+
 ## Como validar o banco
 
 Após executar os scripts de criação, inserts e views, as consultas analíticas devem validar os seguintes números esperados. No estado atual do projeto, os scripts oficiais foram executados no SQL Server Management Studio e o checklist final retornou `OK` para os principais indicadores.
@@ -438,6 +474,24 @@ Validações da fase `v1.4.0`:
 - Foram confirmados no banco restaurado: 8 tabelas principais, 6 views oficiais, 3 procedures, 3 triggers de auditoria ativas, 2 índices incrementais ativos e a tabela de auditoria.
 - Os indicadores finais permaneceram consistentes após o restore: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
 
+Validações da fase `v2.0.0`:
+
+- Migration `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql` executada e validada no banco `QualidadeAmbiental_RestoreTeste`.
+- Banco principal `QualidadeAmbiental` preservado.
+- Tabelas `dbo.Tbl_LotesImportacao` e `dbo.Stg_ResultadosAnaliseImportacao` criadas.
+- Procedures `dbo.usp_ValidarStgResultadosAnalise` e `dbo.usp_CarregarResultadosAnaliseValidados` criadas.
+- Índice `IX_Stg_ResultadosAnaliseImportacao_Lote_Status` criado e habilitado.
+- Constraints, checks e FK da staging criadas e habilitadas.
+- Lote didático com `IdLoteImportacao = 1` criado.
+- 7 linhas recebidas na staging como `PENDENTE`.
+- Validação classificou as 7 linhas como `INVALIDO`.
+- Lote atualizado para `VALIDADO`, com `TotalLinhas = 7`, `TotalValidas = 0`, `TotalInvalidas = 7` e `TotalCarregadas = 0`.
+- Carga sem confirmação bloqueada.
+- Carga com `@ConfirmarCarga = 1` bloqueada por haver registros `INVALIDO`.
+- Nenhum registro inválido foi carregado em `dbo.Tbl_ResultadosAnalise`.
+- `dbo.Tbl_ResultadosAnalise` permaneceu com 72 registros.
+- Indicadores finais permaneceram consistentes: 72 resultados analíticos, 57 com limite, 15 sem limite, 50 conformes com limite e 7 não conformes.
+
 ## Como continuar o projeto
 
 Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente:
@@ -456,8 +510,9 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 12. Consultar `docs/stored_procedures.md` para entender a fase `v1.2.0`.
 13. Consultar `docs/auditoria_historico.md` para entender a fase `v1.3.0`.
 14. Consultar `docs/backup_restore.md` para entender a fase `v1.4.0`.
-15. Registrar qualquer correção incremental em `sql/migrations/`.
-16. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+15. Consultar `docs/importacao_staging.md` para entender a fase `v2.0.0`.
+16. Registrar qualquer correção incremental em `sql/migrations/`.
+17. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
@@ -471,8 +526,8 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | `v1.1.0` | Índices e performance | Índices incrementais para consultas analíticas, critérios técnicos, trade-offs e análise de plano de execução. |
 | `v1.2.0` | Stored procedures | Criar procedures analíticas parametrizadas, validadas no SSMS e alinhadas às views oficiais. |
 | `v1.3.0` | Auditoria e histórico | Adicionar auditoria e rastreabilidade para alterações em resultados, limites e amostras. |
-| `v1.4.0` | Backup e restore | Implementar backup completo, restore em banco separado e validação pós-recuperação. |
-| `v2.0.0` | Pipeline de importação | Criar fluxo de carga com staging, validação, tratamento de inconsistências e carga final. |
+| `v1.4.0` | Backup e restore | Implementada e validada localmente com backup completo, restore em banco separado e validação pós-recuperação. |
+| `v2.0.0` | Pipeline de importação | Implementada e validada localmente com staging, validação, bloqueio de cargas indevidas e preservação dos indicadores. |
 | `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
 
 Melhorias transversais:
@@ -493,6 +548,7 @@ Estado atual do versionamento:
 - A tag anotada `v1.2.0` já foi criada e publicada no GitHub, apontando para a versão de stored procedures analíticas parametrizadas, validações no SQL Server Management Studio e evidências visuais registradas.
 - A tag anotada `v1.3.0` já foi criada e publicada no GitHub, apontando para a versão de auditoria, histórico, rastreabilidade, validações no SQL Server Management Studio e evidências visuais registradas.
 - A versão `v1.4.0` foi implementada e validada localmente, com backup, restore em banco separado, validação pós-recuperação e evidências visuais registradas.
+- A versão `v2.0.0` foi implementada e validada localmente em `QualidadeAmbiental_RestoreTeste`, com pipeline de importação por staging, validação de lote, bloqueios de carga indevida e evidências visuais registradas. A tag `v2.0.0` ainda não foi criada.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
@@ -515,7 +571,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v1.4.0` implementada e validada tecnicamente no SQL Server Management Studio, com backup, restore em banco separado, validação pós-recuperação, documentação técnica e evidências visuais.
+Status: `v2.0.0` implementada e validada tecnicamente no SQL Server Management Studio, com pipeline de importação por staging, validação de lote, bloqueio de cargas indevidas, documentação técnica e evidências visuais.
 
 Já foi concluído:
 
@@ -569,6 +625,16 @@ Já foi concluído:
 - validação de objetos restaurados: tabelas, views, procedures, índices, auditoria e triggers;
 - confirmação de que os indicadores finais permaneceram consistentes após o restore;
 - evidências visuais da fase `v1.4.0` registradas em `docs/evidencias/`.
+- documentação da fase `v2.0.0` em `docs/importacao_staging.md`;
+- script incremental de importação com staging em `sql/migrations/2026-05-13_v2.0.0_importacao_staging.sql`;
+- execução e validação da migration `v2.0.0` no banco `QualidadeAmbiental_RestoreTeste`;
+- criação de `dbo.Tbl_LotesImportacao` e `dbo.Stg_ResultadosAnaliseImportacao`;
+- criação das procedures `dbo.usp_ValidarStgResultadosAnalise` e `dbo.usp_CarregarResultadosAnaliseValidados`;
+- validação de lote didático com 7 registros classificados como `INVALIDO`;
+- validação de bloqueio de carga sem confirmação e de bloqueio de carga com registros inválidos;
+- confirmação de que nenhum registro inválido foi carregado em `dbo.Tbl_ResultadosAnalise`;
+- confirmação de que os indicadores finais permaneceram consistentes após a validação da staging;
+- evidências visuais da fase `v2.0.0` registradas em `docs/evidencias/`.
 
 ## Pendências identificadas
 
