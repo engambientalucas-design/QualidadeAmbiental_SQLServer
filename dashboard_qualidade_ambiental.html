@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Qualidade Ambiental</title>
+
+  <!-- Tailwind CSS via CDN para manter a entrega em arquivo HTML unico. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            water: {
+              50: "#ecfeff",
+              100: "#cffafe",
+              500: "#06b6d4",
+              600: "#0891b2",
+              700: "#0e7490"
+            },
+            mint: {
+              50: "#ecfdf5",
+              100: "#d1fae5",
+              500: "#10b981",
+              600: "#059669"
+            }
+          },
+          boxShadow: {
+            soft: "0 18px 60px rgba(15, 23, 42, 0.12)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Bibliotecas solicitadas: PapaParse para CSV, Chart.js para graficos e Lucide para icones. -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Pequenos ajustes que complementam o Tailwind sem depender de arquivo externo. */
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    .thin-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .thin-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 999px; }
+    .thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900 antialiased transition-colors dark:bg-slate-950 dark:text-slate-100">
+  <div class="min-h-screen">
+    <header class="border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/88">
+      <div class="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-600 text-white shadow-soft">
+              <i data-lucide="waves" class="h-5 w-5"></i>
+            </span>
+            <div>
+              <h1 class="text-2xl font-semibold tracking-normal text-slate-950 dark:text-white">Qualidade de Agua e Esgoto</h1>
+              <p id="dataSourceLabel" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Aguardando carregamento de dados.csv</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="reloadButton" type="button" title="Recarregar dados" class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+          </button>
+          <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="upload" class="h-4 w-4"></i>
+            <span>CSV</span>
+            <input id="csvInput" type="file" accept=".csv,text/csv" class="sr-only" />
+          </label>
+          <button id="themeToggle" type="button" title="Alternar tema" class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="moon" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <section id="statusBanner" class="mb-5 hidden rounded-lg border px-4 py-3 text-sm"></section>
+
+      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Conformidade</p>
+            <i data-lucide="shield-check" class="h-5 w-5 text-emerald-500"></i>
+          </div>
+          <p id="kpiConformidade" class="mt-4 text-3xl font-semibold">--</p>
+          <p id="kpiConformidadeSub" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Resultados com limite</p>
+        </article>
+
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Nao conformes</p>
+            <i data-lucide="triangle-alert" class="h-5 w-5 text-red-500"></i>
+          </div>
+          <p id="kpiNaoConformes" class="mt-4 text-3xl font-semibold">--</p>
+          <p id="kpiNaoConformesSub" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ocorrencias criticas</p>
+        </article>
+
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Ultimo pH</p>
+            <i data-lucide="activity" class="h-5 w-5 text-cyan-500"></i>
+          </div>
+          <p id="kpiPh" class="mt-4 text-3xl font-semibold">--</p>
+          <p id="kpiPhSub" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Parametro pH</p>
+        </article>
+
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Ultima carga</p>
+            <i data-lucide="bar-chart-3" class="h-5 w-5 text-emerald-500"></i>
+          </div>
+          <p id="kpiCarga" class="mt-4 text-3xl font-semibold">--</p>
+          <p id="kpiCargaSub" class="mt-1 text-sm text-slate-500 dark:text-slate-400">DBO / DQO</p>
+        </article>
+      </section>
+
+      <section class="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-5">
+        <div class="xl:col-span-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold">Evolucao temporal do pH</h2>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Media por data de coleta ou analise</p>
+            </div>
+            <span class="rounded-md bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200">Linha</span>
+          </div>
+          <div class="h-80">
+            <canvas id="phChart"></canvas>
+          </div>
+        </div>
+
+        <div class="xl:col-span-2 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold">Carga biologica</h2>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">DBO e DQO agregadas por periodo</p>
+            </div>
+            <span class="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">Barras</span>
+          </div>
+          <div class="h-80">
+            <canvas id="bioChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="border-b border-slate-200 p-5 dark:border-slate-800">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 class="text-base font-semibold">Resultados analiticos</h2>
+              <p id="tableSummary" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Filtros aplicados aos registros carregados</p>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[680px]">
+              <label class="block">
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Parametro</span>
+                <select id="parameterFilter" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-cyan-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950">
+                  <option value="">Todos</option>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</span>
+                <select id="statusFilter" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-cyan-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950">
+                  <option value="">Todos</option>
+                  <option value="nao-conforme">Nao conformes</option>
+                  <option value="conforme">Conformes</option>
+                  <option value="sem-limite">Sem limite</option>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Ponto</span>
+                <div class="relative mt-1">
+                  <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"></i>
+                  <input id="pointSearch" type="search" placeholder="Buscar ponto" class="w-full rounded-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none ring-cyan-500 transition placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950" />
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="thin-scrollbar overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+            <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900/70 dark:text-slate-400">
+              <tr>
+                <th class="px-5 py-3 font-semibold">Data</th>
+                <th class="px-5 py-3 font-semibold">Ponto</th>
+                <th class="px-5 py-3 font-semibold">Tipo</th>
+                <th class="px-5 py-3 font-semibold">Parametro</th>
+                <th class="px-5 py-3 text-right font-semibold">Resultado</th>
+                <th class="px-5 py-3 font-semibold">Limite</th>
+                <th class="px-5 py-3 font-semibold">Classificacao</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Dados de demonstracao para manter o dashboard utilizavel sem um dados.csv na pasta.
+    const fallbackRows = [
+      { CodigoAmostra: "QA-2026-001", DataColeta: "2026-04-10", NomeTipoAmostra: "Agua Tratada", NomePonto: "Saida ETA Central", NomeParametro: "pH", Categoria: "Fisico-quimico", ValorResultado: "7.35", UnidadeMedida: "", ValorMinimo: "6.0", ValorMaximo: "9.5", ClassificacaoResultado: "Conforme" },
+      { CodigoAmostra: "QA-2026-002", DataColeta: "2026-04-11", NomeTipoAmostra: "Corpo Hidrico", NomePonto: "Rio Coxipo Montante", NomeParametro: "pH", Categoria: "Fisico-quimico", ValorResultado: "5.72", UnidadeMedida: "", ValorMinimo: "6.0", ValorMaximo: "9.0", ClassificacaoResultado: "Abaixo do limite minimo" },
+      { CodigoAmostra: "QA-2026-003", DataColeta: "2026-04-12", NomeTipoAmostra: "Esgoto Bruto", NomePonto: "Entrada ETE Sul", NomeParametro: "DBO", Categoria: "Materia organica", ValorResultado: "280", UnidadeMedida: "mg/L", ValorMinimo: "", ValorMaximo: "300", ClassificacaoResultado: "Conforme" },
+      { CodigoAmostra: "QA-2026-004", DataColeta: "2026-04-12", NomeTipoAmostra: "Esgoto Tratado", NomePonto: "Saida ETE Sul", NomeParametro: "DBO", Categoria: "Materia organica", ValorResultado: "72", UnidadeMedida: "mg/L", ValorMinimo: "", ValorMaximo: "60", ClassificacaoResultado: "Acima do limite maximo" },
+      { CodigoAmostra: "QA-2026-005", DataColeta: "2026-04-13", NomeTipoAmostra: "Esgoto Bruto", NomePonto: "Entrada ETE Sul", NomeParametro: "DQO", Categoria: "Materia organica", ValorResultado: "490", UnidadeMedida: "mg/L", ValorMinimo: "", ValorMaximo: "520", ClassificacaoResultado: "Conforme" },
+      { CodigoAmostra: "QA-2026-006", DataColeta: "2026-04-13", NomeTipoAmostra: "Esgoto Tratado", NomePonto: "Saida ETE Sul", NomeParametro: "DQO", Categoria: "Materia organica", ValorResultado: "145", UnidadeMedida: "mg/L", ValorMinimo: "", ValorMaximo: "140", ClassificacaoResultado: "Acima do limite maximo" },
+      { CodigoAmostra: "QA-2026-007", DataColeta: "2026-04-14", NomeTipoAmostra: "Agua Bruta", NomePonto: "Captacao Rio Norte", NomeParametro: "Turbidez", Categoria: "Fisico-quimico", ValorResultado: "3.2", UnidadeMedida: "NTU", ValorMinimo: "", ValorMaximo: "5", ClassificacaoResultado: "Conforme" },
+      { CodigoAmostra: "QA-2026-008", DataColeta: "2026-04-15", NomeTipoAmostra: "Agua Tratada", NomePonto: "Reservatorio Bairro Leste", NomeParametro: "Cloro Residual Livre", Categoria: "Desinfeccao", ValorResultado: "0.12", UnidadeMedida: "mg/L", ValorMinimo: "0.2", ValorMaximo: "2.0", ClassificacaoResultado: "Abaixo do limite minimo" }
+    ];
+
+    const state = {
+      rows: [],
+      filteredRows: [],
+      phChart: null,
+      bioChart: null,
+      sourceType: "demo"
+    };
+
+    const aliases = {
+      data: ["DataColeta", "DataAnalise", "Data", "data_coleta", "data_analise"],
+      ponto: ["NomePonto", "PontoMonitoramento", "PontoColeta", "Ponto", "nome_ponto"],
+      tipo: ["NomeTipoAmostra", "TipoAmostra", "Tipo", "nome_tipo_amostra"],
+      parametro: ["NomeParametro", "Parametro", "Parâmetro", "parametro", "nome_parametro"],
+      valor: ["ValorResultado", "Valor", "Resultado", "valor_resultado"],
+      unidade: ["UnidadeMedida", "Unidade", "unidade_medida"],
+      minimo: ["ValorMinimo", "LimiteMinimo", "Minimo", "valor_minimo"],
+      maximo: ["ValorMaximo", "LimiteMaximo", "Maximo", "valor_maximo"],
+      classificacao: ["ClassificacaoResultado", "Classificacao", "StatusConformidade", "Conformidade", "classificacao_resultado"],
+      naoConforme: ["IndicadorNaoConforme", "NaoConforme", "ForaPadrao"],
+      codigo: ["CodigoAmostra", "Amostra", "Codigo", "codigo_amostra"]
+    };
+
+    const els = {
+      dataSourceLabel: document.getElementById("dataSourceLabel"),
+      csvInput: document.getElementById("csvInput"),
+      reloadButton: document.getElementById("reloadButton"),
+      themeToggle: document.getElementById("themeToggle"),
+      statusBanner: document.getElementById("statusBanner"),
+      parameterFilter: document.getElementById("parameterFilter"),
+      statusFilter: document.getElementById("statusFilter"),
+      pointSearch: document.getElementById("pointSearch"),
+      tableBody: document.getElementById("resultsTableBody"),
+      tableSummary: document.getElementById("tableSummary"),
+      kpiConformidade: document.getElementById("kpiConformidade"),
+      kpiConformidadeSub: document.getElementById("kpiConformidadeSub"),
+      kpiNaoConformes: document.getElementById("kpiNaoConformes"),
+      kpiNaoConformesSub: document.getElementById("kpiNaoConformesSub"),
+      kpiPh: document.getElementById("kpiPh"),
+      kpiPhSub: document.getElementById("kpiPhSub"),
+      kpiCarga: document.getElementById("kpiCarga"),
+      kpiCargaSub: document.getElementById("kpiCargaSub")
+    };
+
+    function pick(row, field) {
+      const key = aliases[field].find((candidate) => row[candidate] !== undefined && row[candidate] !== null && String(row[candidate]).trim() !== "");
+      return key ? row[key] : "";
+    }
+
+    function parseNumber(value) {
+      if (value === null || value === undefined || value === "") return null;
+      if (typeof value === "number") return Number.isFinite(value) ? value : null;
+      const raw = String(value).trim();
+      const hasComma = raw.includes(",");
+      const hasDot = raw.includes(".");
+      const normalized = hasComma && hasDot
+        ? raw.replace(/\./g, "").replace(",", ".")
+        : raw.replace(",", ".");
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const text = String(value).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(text)) return new Date(text.slice(0, 10) + "T00:00:00");
+      const br = text.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
+      const parsed = new Date(text);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function formatDate(value) {
+      const date = parseDate(value);
+      return date ? new Intl.DateTimeFormat("pt-BR").format(date) : "--";
+    }
+
+    function formatNumber(value, digits = 2) {
+      const number = parseNumber(value);
+      if (number === null) return "--";
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: digits }).format(number);
+    }
+
+    function normalizedRows(rows) {
+      return rows
+        .filter((row) => Object.values(row).some((value) => String(value ?? "").trim() !== ""))
+        .map((row, index) => {
+          const valor = parseNumber(pick(row, "valor"));
+          const minimo = parseNumber(pick(row, "minimo"));
+          const maximo = parseNumber(pick(row, "maximo"));
+          const classificacaoOriginal = String(pick(row, "classificacao")).trim();
+          const indicadorNaoConforme = String(pick(row, "naoConforme")).trim();
+          const inferredStatus = inferStatus(valor, minimo, maximo, classificacaoOriginal, indicadorNaoConforme);
+
+          return {
+            id: pick(row, "codigo") || `Linha ${index + 1}`,
+            data: pick(row, "data"),
+            ponto: pick(row, "ponto") || "Ponto nao informado",
+            tipo: pick(row, "tipo") || "Tipo nao informado",
+            parametro: pick(row, "parametro") || "Parametro nao informado",
+            valor,
+            unidade: pick(row, "unidade"),
+            minimo,
+            maximo,
+            classificacao: classificacaoOriginal || inferredStatus.label,
+            status: inferredStatus.status
+          };
+        });
+    }
+
+    function inferStatus(valor, minimo, maximo, classificacao, indicadorNaoConforme) {
+      const text = classificacao.toLowerCase();
+      if (indicadorNaoConforme === "1" || text.includes("acima") || text.includes("abaixo") || text.includes("nao conforme") || text.includes("não conforme")) {
+        return { status: "nao-conforme", label: classificacao || "Fora do padrao" };
+      }
+      if (text.includes("sem limite")) return { status: "sem-limite", label: classificacao || "Sem limite de referencia" };
+      if (valor !== null && ((minimo !== null && valor < minimo) || (maximo !== null && valor > maximo))) {
+        return { status: "nao-conforme", label: valor < minimo ? "Abaixo do limite minimo" : "Acima do limite maximo" };
+      }
+      if (minimo === null && maximo === null) return { status: "sem-limite", label: classificacao || "Sem limite de referencia" };
+      return { status: "conforme", label: classificacao || "Conforme" };
+    }
+
+    function statusClasses(status) {
+      if (status === "nao-conforme") return "bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-200 dark:ring-red-900";
+      if (status === "sem-limite") return "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900";
+      return "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900";
+    }
+
+    function statusIcon(status) {
+      if (status === "nao-conforme") return "triangle-alert";
+      if (status === "sem-limite") return "circle-help";
+      return "check-circle-2";
+    }
+
+    function setStatusBanner(type, message) {
+      if (!message) {
+        els.statusBanner.className = "mb-5 hidden rounded-lg border px-4 py-3 text-sm";
+        els.statusBanner.textContent = "";
+        return;
+      }
+
+      const classes = {
+        info: "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-200",
+        warn: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+        error: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+      };
+
+      els.statusBanner.className = `mb-5 rounded-lg border px-4 py-3 text-sm ${classes[type] || classes.info}`;
+      els.statusBanner.textContent = message;
+    }
+
+    function renderAll() {
+      applyFilters();
+      renderKpis();
+      renderTable();
+      renderCharts();
+      lucide.createIcons();
+    }
+
+    function populateParameterFilter() {
+      const current = els.parameterFilter.value;
+      const parameters = [...new Set(state.rows.map((row) => row.parametro))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+      els.parameterFilter.innerHTML = '<option value="">Todos</option>' + parameters.map((param) => `<option value="${escapeHtml(param)}">${escapeHtml(param)}</option>`).join("");
+      els.parameterFilter.value = parameters.includes(current) ? current : "";
+    }
+
+    function applyFilters() {
+      const parameter = els.parameterFilter.value;
+      const status = els.statusFilter.value;
+      const search = els.pointSearch.value.trim().toLowerCase();
+
+      state.filteredRows = state.rows.filter((row) => {
+        const matchesParameter = !parameter || row.parametro === parameter;
+        const matchesStatus = !status || row.status === status;
+        const matchesSearch = !search || row.ponto.toLowerCase().includes(search);
+        return matchesParameter && matchesStatus && matchesSearch;
+      });
+    }
+
+    function renderKpis() {
+      const totalComLimite = state.rows.filter((row) => row.status !== "sem-limite").length;
+      const naoConformes = state.rows.filter((row) => row.status === "nao-conforme").length;
+      const conformes = state.rows.filter((row) => row.status === "conforme").length;
+      const conformidade = totalComLimite ? (conformes / totalComLimite) * 100 : 0;
+      const lastPh = latestByParameter("pH");
+      const lastCarga = latestByParameter(["DBO", "DQO"]);
+
+      els.kpiConformidade.textContent = totalComLimite ? `${formatNumber(conformidade, 1)}%` : "--";
+      els.kpiConformidadeSub.textContent = `${conformes} conformes de ${totalComLimite} com limite`;
+      els.kpiNaoConformes.textContent = String(naoConformes);
+      els.kpiNaoConformesSub.textContent = `${state.rows.length} resultados analisados`;
+      els.kpiPh.textContent = lastPh ? `${formatNumber(lastPh.valor, 2)}${lastPh.unidade ? " " + lastPh.unidade : ""}` : "--";
+      els.kpiPhSub.textContent = lastPh ? `${lastPh.ponto} - ${formatDate(lastPh.data)}` : "Parametro pH";
+      els.kpiCarga.textContent = lastCarga ? `${formatNumber(lastCarga.valor, 1)} ${lastCarga.unidade || ""}` : "--";
+      els.kpiCargaSub.textContent = lastCarga ? `${lastCarga.parametro} - ${formatDate(lastCarga.data)}` : "DBO / DQO";
+    }
+
+    function latestByParameter(parameterNames) {
+      const names = Array.isArray(parameterNames) ? parameterNames : [parameterNames];
+      return state.rows
+        .filter((row) => names.some((name) => row.parametro.toLowerCase() === name.toLowerCase()) && row.valor !== null)
+        .sort((a, b) => (parseDate(b.data)?.getTime() || 0) - (parseDate(a.data)?.getTime() || 0))[0];
+    }
+
+    function renderTable() {
+      els.tableSummary.textContent = `${state.filteredRows.length} de ${state.rows.length} registros exibidos`;
+      const rows = state.filteredRows
+        .slice()
+        .sort((a, b) => (parseDate(b.data)?.getTime() || 0) - (parseDate(a.data)?.getTime() || 0))
+        .map((row) => {
+          const limit = row.minimo !== null || row.maximo !== null
+            ? `${row.minimo !== null ? formatNumber(row.minimo) : "-"} a ${row.maximo !== null ? formatNumber(row.maximo) : "-"}`
+            : "Sem limite";
+          return `
+            <tr class="${row.status === "nao-conforme" ? "bg-red-50/55 dark:bg-red-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"}">
+              <td class="whitespace-nowrap px-5 py-4 text-slate-600 dark:text-slate-300">${formatDate(row.data)}</td>
+              <td class="min-w-56 px-5 py-4 font-medium">${escapeHtml(row.ponto)}</td>
+              <td class="whitespace-nowrap px-5 py-4 text-slate-600 dark:text-slate-300">${escapeHtml(row.tipo)}</td>
+              <td class="whitespace-nowrap px-5 py-4">${escapeHtml(row.parametro)}</td>
+              <td class="whitespace-nowrap px-5 py-4 text-right font-semibold">${formatNumber(row.valor, 4)} ${escapeHtml(row.unidade || "")}</td>
+              <td class="whitespace-nowrap px-5 py-4 text-slate-600 dark:text-slate-300">${escapeHtml(limit)}</td>
+              <td class="whitespace-nowrap px-5 py-4">
+                <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ${statusClasses(row.status)}">
+                  <i data-lucide="${statusIcon(row.status)}" class="h-3.5 w-3.5"></i>
+                  ${escapeHtml(row.classificacao)}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+      els.tableBody.innerHTML = rows || `<tr><td colspan="7" class="px-5 py-10 text-center text-slate-500 dark:text-slate-400">Nenhum registro encontrado para os filtros atuais.</td></tr>`;
+    }
+
+    function aggregateByDate(rows, parameterNames) {
+      const names = Array.isArray(parameterNames) ? parameterNames : [parameterNames];
+      const bucket = new Map();
+
+      rows.forEach((row) => {
+        if (!names.some((name) => row.parametro.toLowerCase() === name.toLowerCase()) || row.valor === null) return;
+        const date = parseDate(row.data);
+        const key = date ? date.toISOString().slice(0, 10) : "Sem data";
+        if (!bucket.has(key)) bucket.set(key, { total: 0, count: 0 });
+        bucket.get(key).total += row.valor;
+        bucket.get(key).count += 1;
+      });
+
+      return [...bucket.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, item]) => ({ date, value: item.total / item.count }));
+    }
+
+    function renderCharts() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const gridColor = isDark ? "rgba(148, 163, 184, 0.18)" : "rgba(100, 116, 139, 0.18)";
+      const textColor = isDark ? "#cbd5e1" : "#334155";
+      const phData = aggregateByDate(state.rows, "pH");
+      const dboData = aggregateByDate(state.rows, "DBO");
+      const dqoData = aggregateByDate(state.rows, "DQO");
+      const bioLabels = [...new Set([...dboData.map((d) => d.date), ...dqoData.map((d) => d.date)])].sort();
+
+      const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: textColor, boxWidth: 12, boxHeight: 12 } } },
+        scales: {
+          x: { grid: { color: gridColor }, ticks: { color: textColor } },
+          y: { grid: { color: gridColor }, ticks: { color: textColor } }
+        }
+      };
+
+      state.phChart?.destroy();
+      state.bioChart?.destroy();
+
+      state.phChart = new Chart(document.getElementById("phChart"), {
+        type: "line",
+        data: {
+          labels: phData.map((item) => formatDate(item.date)),
+          datasets: [{
+            label: "pH medio",
+            data: phData.map((item) => Number(item.value.toFixed(2))),
+            borderColor: "#0891b2",
+            backgroundColor: "rgba(8, 145, 178, 0.14)",
+            fill: true,
+            tension: 0.34,
+            pointRadius: 4
+          }]
+        },
+        options: baseOptions
+      });
+
+      state.bioChart = new Chart(document.getElementById("bioChart"), {
+        type: "bar",
+        data: {
+          labels: bioLabels.map((date) => formatDate(date)),
+          datasets: [
+            {
+              label: "DBO",
+              data: bioLabels.map((date) => dboData.find((item) => item.date === date)?.value ?? null),
+              backgroundColor: "rgba(16, 185, 129, 0.78)",
+              borderRadius: 5
+            },
+            {
+              label: "DQO",
+              data: bioLabels.map((date) => dqoData.find((item) => item.date === date)?.value ?? null),
+              backgroundColor: "rgba(6, 182, 212, 0.78)",
+              borderRadius: 5
+            }
+          ]
+        },
+        options: baseOptions
+      });
+    }
+
+    function loadRows(rows, sourceLabel, sourceType = "demo") {
+      state.rows = normalizedRows(rows);
+      state.sourceType = sourceType;
+      populateParameterFilter();
+      els.dataSourceLabel.textContent = `${sourceLabel} - ${state.rows.length} registros carregados`;
+      renderAll();
+    }
+
+    function loadCsvFile(file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: false,
+        complete: (results) => {
+          setStatusBanner("info", "Arquivo CSV carregado localmente. Para operacao integrada, prefira a API sobre as views oficiais do SQL Server.");
+          loadRows(results.data, file.name, "csv");
+        },
+        error: () => {
+          setStatusBanner("error", "Nao foi possivel ler o CSV enviado. Exibindo dados de demonstracao.");
+          loadRows(fallbackRows, "Dados de demonstracao", "demo");
+        }
+      });
+    }
+
+    async function tryLoadApi() {
+      const response = await fetch("/api/resultados?page=1&pageSize=500", { cache: "no-store" });
+      if (!response.ok) throw new Error(`API retornou HTTP ${response.status}`);
+      const payload = await response.json();
+      const rows = Array.isArray(payload) ? payload : payload.data;
+      if (!Array.isArray(rows) || rows.length === 0) throw new Error("API nao retornou registros.");
+      setStatusBanner("info", "Dados carregados pela API somente leitura conectada ao SQL Server.");
+      loadRows(rows, "API / dbo.VW_ConformidadeResultados", "api");
+      return true;
+    }
+
+    function tryLoadLocalCsv() {
+      Papa.parse("dados.csv", {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: false,
+        complete: (results) => {
+          if (results.data?.length) {
+            setStatusBanner("warn", "API indisponivel. Dashboard carregado a partir de dados.csv local.");
+            loadRows(results.data, "dados.csv", "csv");
+          }
+          else {
+            setStatusBanner("warn", "API e dados.csv indisponiveis. Exibindo dados de demonstracao.");
+            loadRows(fallbackRows, "Dados de demonstracao", "demo");
+          }
+        },
+        error: () => {
+          setStatusBanner("warn", "API e dados.csv indisponiveis. Exibindo dados de demonstracao.");
+          loadRows(fallbackRows, "Dados de demonstracao", "demo");
+        }
+      });
+    }
+
+    async function loadInitialData() {
+      setStatusBanner("info", "Carregando dados do dashboard...");
+      try {
+        await tryLoadApi();
+      }
+      catch {
+        tryLoadLocalCsv();
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    els.csvInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (file) loadCsvFile(file);
+    });
+
+    els.reloadButton.addEventListener("click", loadInitialData);
+
+    [els.parameterFilter, els.statusFilter, els.pointSearch].forEach((element) => {
+      element.addEventListener("input", renderAll);
+      element.addEventListener("change", renderAll);
+    });
+
+    els.themeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      renderCharts();
+      lucide.createIcons();
+    });
+
+    lucide.createIcons();
+    loadInitialData();
+  </script>
+</body>
+</html>

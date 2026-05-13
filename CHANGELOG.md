@@ -214,10 +214,45 @@ Fase dedicada a importação controlada de resultados analíticos externos, com 
 - A ausência de registros válidos carregados é esperada, pois a base didática atual já possui as combinações reais de 6 amostras x 12 parâmetros em `dbo.Tbl_ResultadosAnalise`.
 - A fase demonstrou a segurança do pipeline: retenção de dados brutos na staging, identificação de inválidos, mensagens claras de validação, bloqueio de carga sem confirmação, bloqueio de carga com inválidos e preservação da tabela oficial.
 - A fase não implementa integração real com laboratório externo, automação corporativa, SSIS, API ou rotina externa de importação.
-- A tag `v2.0.0` ainda não foi criada neste registro.
+- A tag `v2.0.0` foi criada e publicada no GitHub em etapa posterior de versionamento.
+
+## [v2.1.0] - 2026-05-13 - Contrato de dados e encerramento controlado
+
+Fase dedicada a consolidar o contrato de dados para consumo externo, enquadrar o dashboard/API local como camada demonstrativa e encerrar o projeto principal como portfolio tecnico SQL Server, sem expandir o repositorio para produto operacional.
+
+### Adicionado
+
+- Documento `docs/contrato_dados.md` com contrato oficial de dados para consumo externo a partir de `dbo.VW_ConformidadeResultados`.
+- Documento `docs/contrato_frontend.md` ajustado para deixar claro o papel da API local read-only, do dashboard demonstrativo e do fallback CSV.
+- Documento `docs/frontend_roadmap.md` ajustado para separar a camada local demonstrativa de evolucoes operacionais futuras.
+- Dashboard local `dashboard_qualidade_ambiental.html` para visualizacao demonstrativa dos indicadores ambientais.
+- API PowerShell local e somente leitura em `scripts/start_dashboard_api.ps1`.
+
+### Consolidado
+
+- SQL Server mantido como fonte oficial dos dados.
+- CSV tratado apenas como artefato didatico de fallback ou consumo externo.
+- API PowerShell tratada como implementacao local, experimental e read-only.
+- Dashboard tratado como camada de portfolio, nao como frontend produtivo.
+- Evolucoes como API dedicada, Power BI, frontend completo, autenticacao, deploy, Docker e CI/CD classificadas como projetos derivados.
+
+### Indicadores preservados
+
+- Total de resultados analiticos: 72.
+- Resultados com limite: 57.
+- Resultados sem limite: 15.
+- Conformes com limite: 50.
+- Nao conformes com limite: 7.
+
+### Observacoes
+
+- Esta fase nao cria scripts SQL novos.
+- Esta fase nao altera migrations, dados, evidencias ou regras de conformidade.
+- Esta fase nao implementa producao, alta disponibilidade, autenticacao, deploy ou API corporativa.
+- O projeto principal pode ser considerado concluivel como portfolio tecnico SQL Server apos esta consolidacao.
 
 ## Próximas versões planejadas
 
 | Versão | Foco |
 | --- | --- |
-| `v2.1.0` | Power BI e camada visual executiva. |
+| Projetos derivados | API dedicada, Power BI, dashboard web completo ou DataOps, sempre fora do escopo do repositorio principal. |

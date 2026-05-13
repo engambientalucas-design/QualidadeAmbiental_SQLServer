@@ -6,7 +6,7 @@ O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQ
 
 A proposta é organizar dados de pontos de coleta, amostras, parâmetros ambientais, resultados laboratoriais, limites de referência e relatórios analíticos. O projeto também tem finalidade de portfólio técnico, demonstrando modelagem relacional, T-SQL, organização de scripts, views analíticas e boas práticas de documentação.
 
-Versão atual: `v2.0.0` - pipeline de importação com staging, validação, bloqueio de cargas indevidas e evidências visuais no SQL Server Management Studio.
+Versão em consolidação: `v2.1.0` - contrato de dados para consumo externo, encerramento controlado do projeto principal e camada local demonstrativa de dashboard/API read-only.
 
 ## Objetivo do projeto
 
@@ -48,10 +48,14 @@ QualidadeAmbiental_SQLServer/
 |   |-- regras_negocio.md
 |   |-- auditoria_historico.md
 |   |-- backup_restore.md
+|   |-- contrato_dados.md
+|   |-- contrato_frontend.md
+|   |-- frontend_roadmap.md
 |   |-- importacao_staging.md
 |   |-- stored_procedures.md
 |   `-- relatorios.md
 |-- scripts/
+|   `-- start_dashboard_api.ps1
 |-- sql/
 |   |-- migrations/
 |   |   |-- 2026-05-11_v1.1.0_indices_performance.sql
@@ -92,6 +96,9 @@ A documentação complementar do projeto fica na pasta `docs/` e deve ser usada 
 - `docs/auditoria_historico.md`: documenta a fase `v1.3.0`, os critérios de auditoria, tabelas auditadas, triggers, validações e evidências.
 - `docs/backup_restore.md`: documenta a fase `v1.4.0`, estratégia de backup, restore em banco separado, validação pós-recuperação e evidências.
 - `docs/importacao_staging.md`: documenta a fase `v2.0.0`, pipeline de importação com staging, validação, classificação de registros e carga final controlada.
+- `docs/contrato_dados.md`: documenta a fase `v2.1.0`, contrato de dados para consumo externo e critério de encerramento do projeto principal.
+- `docs/contrato_frontend.md`: documenta o contrato entre SQL Server, API local read-only e dashboard demonstrativo.
+- `docs/frontend_roadmap.md`: documenta o enquadramento do dashboard local e separa evoluções operacionais como projetos derivados.
 - `docs/evidencias/`: armazena prints de validação capturados no SQL Server Management Studio.
 
 ## Ordem recomendada de execução dos scripts
@@ -512,14 +519,15 @@ Para continuar o desenvolvimento em outro computador, ferramenta, IA ou ambiente
 13. Consultar `docs/auditoria_historico.md` para entender a fase `v1.3.0`.
 14. Consultar `docs/backup_restore.md` para entender a fase `v1.4.0`.
 15. Consultar `docs/importacao_staging.md` para entender a fase `v2.0.0`.
-16. Registrar qualquer correção incremental em `sql/migrations/`.
-17. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
+16. Consultar `docs/contrato_dados.md` para entender o contrato final de consumo externo e o encerramento controlado do projeto principal.
+17. Registrar qualquer correção incremental em `sql/migrations/`, se houver necessidade real.
+18. Manter o README e os arquivos de `docs/` atualizados a cada evolução relevante.
 
 Caso o projeto mude de ferramenta ou responsável técnico, este README deve ser usado como documentação de referência para entender a finalidade, estrutura, regras e próximos passos.
 
 ## Roadmap de evolução
 
-O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável do portfólio. As próximas fases devem ser evoluídas com commits e tags próprias.
+O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável do portfólio. A versão `v2.1.0` representa o encerramento controlado do projeto principal como portfólio técnico SQL Server.
 
 | Versão | Foco | Objetivo técnico |
 | --- | --- | --- |
@@ -529,13 +537,16 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | `v1.3.0` | Auditoria e histórico | Adicionar auditoria e rastreabilidade para alterações em resultados, limites e amostras. |
 | `v1.4.0` | Backup e restore | Implementada e validada localmente com backup completo, restore em banco separado e validação pós-recuperação. |
 | `v2.0.0` | Pipeline de importação | Publicada com staging, validação, bloqueio de cargas indevidas, evidências visuais e preservação dos indicadores. |
-| `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
+| `v2.1.0` | Contrato de dados e encerramento | Consolidar contrato de dados para consumo externo, documentar a camada local demonstrativa e encerrar o repositório principal sem expandir para produto operacional. |
 
-Melhorias transversais:
+Evoluções fora do escopo do projeto principal:
 
-- revisar futuramente limites de referência com base normativa, se esse for o objetivo;
-- manter documentação, evidências e changelog atualizados a cada evolução relevante;
-- registrar decisões técnicas, limitações e critérios de validação por versão.
+- `QualidadeAmbiental_API`: API dedicada em .NET, Node.js ou tecnologia equivalente.
+- `QualidadeAmbiental_PowerBI`: camada semântica, medidas e relatórios executivos.
+- `QualidadeAmbiental_Dashboard`: frontend web completo consumindo uma API dedicada.
+- `QualidadeAmbiental_DataOps`: automações, deploy e rotinas operacionais futuras, se houver necessidade.
+
+Essas frentes podem reutilizar o banco `QualidadeAmbiental`, mas devem ser tratadas como projetos derivados para evitar crescimento indefinido do repositório SQL Server principal.
 
 ## Versionamento com Git
 
@@ -572,7 +583,7 @@ A IA deve ser tratada como ferramenta de apoio técnico, não como fonte normati
 
 ## Status atual do projeto
 
-Status: `v2.0.0` implementada e validada tecnicamente no SQL Server Management Studio, com pipeline de importação por staging, validação de lote, bloqueio de cargas indevidas, documentação técnica e evidências visuais.
+Status: `v2.1.0` em consolidação documental, com contrato de dados para consumo externo, camada local demonstrativa de dashboard/API read-only e encerramento controlado do projeto principal como portfólio técnico SQL Server.
 
 Já foi concluído:
 
@@ -636,9 +647,52 @@ Já foi concluído:
 - confirmação de que nenhum registro inválido foi carregado em `dbo.Tbl_ResultadosAnalise`;
 - confirmação de que os indicadores finais permaneceram consistentes após a validação da staging;
 - evidências visuais da fase `v2.0.0` registradas em `docs/evidencias/`.
+- documentação da fase `v2.1.0` em `docs/contrato_dados.md`;
+- documentação do contrato frontend em `docs/contrato_frontend.md`;
+- documentação do enquadramento do dashboard local em `docs/frontend_roadmap.md`;
+- criação de uma camada local demonstrativa com `dashboard_qualidade_ambiental.html`;
+- criação de API PowerShell local, experimental e somente leitura em `scripts/start_dashboard_api.ps1`;
+- definição de que API dedicada, Power BI, frontend completo, autenticação, deploy, Docker e CI/CD devem ser tratados como projetos derivados.
 
 ## Pendências identificadas
 
 - Validar se a constraint de unicidade por amostra e parâmetro atende ao cenário final do projeto.
 - Decidir se os limites didáticos serão mantidos ou se haverá revisão normativa posterior.
 - Avaliar criação de índices adicionais para consultas analíticas, se o volume de dados crescer.
+
+## Camada local demonstrativa de dashboard
+
+O projeto possui uma camada local de demonstracao para consumo dos indicadores ambientais. Ela nao representa aplicacao produtiva, API corporativa, sistema com autenticacao ou frontend final.
+
+O SQL Server continua sendo a fonte oficial dos dados. O arquivo `dados.csv`, quando usado, e apenas fallback didatico para demonstracao offline ou sem SQL Server ativo.
+
+Arquivos principais:
+
+- `dashboard_qualidade_ambiental.html`: SPA em HTML, Tailwind CSS, PapaParse e Chart.js.
+- `docs/contrato_frontend.md`: contrato entre SQL Server, API local read-only e dashboard demonstrativo.
+- `docs/frontend_roadmap.md`: enquadramento do dashboard local e separacao de evolucoes futuras como projetos derivados.
+- `scripts/start_dashboard_api.ps1`: API PowerShell local, experimental e somente leitura para demonstracao.
+
+Execucao local recomendada:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start_dashboard_api.ps1 -ServerInstance ".\SQLEXPRESS" -Database "QualidadeAmbiental"
+```
+
+Depois acesse:
+
+```text
+http://127.0.0.1:5500/dashboard_qualidade_ambiental.html
+```
+
+O dashboard tenta carregar dados da API primeiro. Se a API nao estiver disponivel, tenta ler `dados.csv`. Se nenhum dos dois estiver disponivel, exibe dados de demonstracao.
+
+Evolucoes como API dedicada, Power BI, frontend completo, autenticacao, deploy, Docker e CI/CD ficam fora do escopo deste repositorio principal.
+
+## Status final recomendado
+
+Status do projeto: concluivel como portfolio tecnico SQL Server.
+
+O projeto cobre modelagem relacional, carga didatica, views analiticas, indices, plano de execucao, stored procedures, auditoria, backup/restore, staging de importacao, validacao de dados e contrato de dados para consumo externo.
+
+A camada de dashboard/API local e apenas demonstrativa. Evolucoes futuras, como API REST dedicada, Power BI, frontend completo ou deploy, devem ser tratadas como projetos derivados para evitar expansao indefinida do escopo.
