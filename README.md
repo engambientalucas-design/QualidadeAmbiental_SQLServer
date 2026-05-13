@@ -48,6 +48,7 @@ QualidadeAmbiental_SQLServer/
 |   |-- regras_negocio.md
 |   |-- auditoria_historico.md
 |   |-- backup_restore.md
+|   |-- importacao_staging.md
 |   |-- stored_procedures.md
 |   `-- relatorios.md
 |-- scripts/
@@ -527,7 +528,7 @@ O projeto parte da versão `v1.0.0`, considerada a primeira versão publicável 
 | `v1.2.0` | Stored procedures | Criar procedures analíticas parametrizadas, validadas no SSMS e alinhadas às views oficiais. |
 | `v1.3.0` | Auditoria e histórico | Adicionar auditoria e rastreabilidade para alterações em resultados, limites e amostras. |
 | `v1.4.0` | Backup e restore | Implementada e validada localmente com backup completo, restore em banco separado e validação pós-recuperação. |
-| `v2.0.0` | Pipeline de importação | Implementada e validada localmente com staging, validação, bloqueio de cargas indevidas e preservação dos indicadores. |
+| `v2.0.0` | Pipeline de importação | Publicada com staging, validação, bloqueio de cargas indevidas, evidências visuais e preservação dos indicadores. |
 | `v2.1.0` | Power BI | Construir uma camada visual executiva conectada aos indicadores principais do projeto. |
 
 Melhorias transversais:
@@ -547,8 +548,8 @@ Estado atual do versionamento:
 - A tag anotada `v1.1.0` já foi criada e publicada no GitHub, apontando para a versão de índices, performance e análise de plano de execução.
 - A tag anotada `v1.2.0` já foi criada e publicada no GitHub, apontando para a versão de stored procedures analíticas parametrizadas, validações no SQL Server Management Studio e evidências visuais registradas.
 - A tag anotada `v1.3.0` já foi criada e publicada no GitHub, apontando para a versão de auditoria, histórico, rastreabilidade, validações no SQL Server Management Studio e evidências visuais registradas.
-- A versão `v1.4.0` foi implementada e validada localmente, com backup, restore em banco separado, validação pós-recuperação e evidências visuais registradas.
-- A versão `v2.0.0` foi implementada e validada localmente em `QualidadeAmbiental_RestoreTeste`, com pipeline de importação por staging, validação de lote, bloqueios de carga indevida e evidências visuais registradas. A tag `v2.0.0` ainda não foi criada.
+- A tag anotada `v1.4.0` já foi criada e publicada no GitHub, apontando para a versão de backup completo, restore em banco separado, validação pós-recuperação e evidências visuais registradas.
+- A tag anotada `v2.0.0` já foi criada e publicada no GitHub, apontando para a versão de pipeline de importação com staging, validação, bloqueio de cargas indevidas e evidências visuais registradas.
 - Existe um commit inicial com os arquivos principais do projeto.
 - A documentação de regras de negócio foi adicionada em commit separado.
 - As documentações de relatórios, dicionário de dados e evidências foram adicionadas em commits próprios.
