@@ -1,5 +1,5 @@
 # QualidadeAmbiental SQL Server
-![Capa do projeto](./assets/capa-qualidadeambiental-sqlserver.png)
+
 
 ## Resumo executivo
 
