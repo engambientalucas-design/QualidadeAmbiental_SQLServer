@@ -1,6 +1,5 @@
 # QualidadeAmbiental SQL Server
 
-
 ## Resumo executivo
 
 O projeto **QualidadeAmbiental_SQLServer** é um banco de dados relacional em SQL Server aplicado à Engenharia Ambiental, com foco no monitoramento de qualidade de água e esgoto.
